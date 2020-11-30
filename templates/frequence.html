@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>matplot</title>
+  </head>
+  <body>
+  <form action="frequence"  method=post enctype="multipart/form-data" >{% csrf_token %}
+    Fréquence = <input type="text" name="freq" value="{{ freq }}" /><br>
+    Phase = <input type="text" name="phase" value="{{ phase }}" /><br>
+    <input type="submit" value="Plot curve">
+    </form>
+    <img src="data:image/png;base64,{{ data }}" alt="" height="500" ,width="500">
+  </body>
+</html>

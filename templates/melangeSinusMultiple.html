@@ -1,0 +1,33 @@
+<body>
+<TITLE>Mélange de fréquences</TITLE>
+<html>
+
+
+
+
+<form action="melange_sinus" method=post>{% csrf_token %}
+<div><label>Fréquence 1<input name="f1" value="{{ f1 }}" size="5"></label></div>
+<div><label>Amplitude 1<input name="A1" value="{{ a1 }}" size="5"></label></div>
+<div><label>Fréquence 2<input name="f2" value="{{ f2 }}" size="5"></label></div>
+<div><label>Amplitude 2<input name="A2" value="{{ a2 }}" size="5"></label></div>
+<div><label>Fréquence 3<input name="f3" value="{{ f3 }}" size="5"></label></div>
+<div><label>Amplitude 3<input name="A3" value="{{ a3 }}" size="5"></label></div>
+<div><input type="submit" value="Plot curve"></div>
+</form>
+<br />
+
+<audio controls  autoplay >
+<source src="data:audio/x-wav;base64,{{ data_snd }}" />
+      You need a HTML5 compliant web browser. (eg Firefox 3.5...)
+</audio>
+<br/>
+
+<img alt="" height="300" ,width="300" src="data:image/png;base64,{{ data1 }}" />
+<img alt="" height="300" ,width="300" src="data:image/png;base64,{{ data2 }}" />
+
+
+
+</body>
+</html>
+                     
+                          

@@ -1,0 +1,14 @@
+<body>
+<TITLE>Cercle trigonométrie et exponentielle complexe</TITLE>
+<html>
+<form action="cercle_trigo" method=post>{% csrf_token %}
+<div><label>Angle en radian<input name="angle" size="5" value="{{ angle }}"></label></div>
+<div><input type="submit" width="200" height="200" value="Calculer" onclick="this.disabled=true;this.value='Calcul en cours';"> </div>
+</form>
+Résultats<br />
+<img src="data:image/png;base64,{{ data }}" alt="" height="500" ,width="500"/>
+<br />
+</body>
+</html>
+                     
+                          

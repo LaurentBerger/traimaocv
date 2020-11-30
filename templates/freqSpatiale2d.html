@@ -1,0 +1,23 @@
+<header X-Frame-Options SAMEORIGIN, GOFORIT/>
+<body>
+<TITLE>Fréquence spatiale</TITLE>
+<html>
+<form action="freq_spatiale_2d" method=post >{% csrf_token %}
+<div><label>Frequence spatiale<input name="nu" size="5" value="{{ nu }}"></label></div>
+<div><input type="submit" value="Draw Image"></div>
+</form>
+<table>
+<tr>
+<td>
+<img src="data:image/png;base64,{{ data1 }}" alt="" height="500" ,width="500"/>
+
+</td>
+<td>
+<img src="data:image/png;base64,{{ data2 }}" alt="" height="500" ,width="500"/>
+</td>
+</tr>
+</table>
+</body>
+</html>
+                     
+                          

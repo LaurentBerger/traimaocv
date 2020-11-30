@@ -1,0 +1,23 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body>
+<title>Transformée de Fourier d'une exponentielle amortie</title>
+
+<form action="tf_signal_amorti" method="post">{% csrf_token %}
+<div><label>Frequence<input name="f1" size="5" value="{{ f1 }}"></label></div>
+<div><label>Valeur de tau<input name="tau" size="5" value="{{ tau }}"></label></div>
+<div><input type="submit" value="Calculer" onclick="this.disabled=true;this.value='Calcul en cours';" width="200" height="200"> </div>
+</form>
+Resultats<br>
+<audio controls  autoplay >
+<source src="data:audio/x-wav;base64,{{ data_snd }}" />
+      You need a HTML5 compliant web browser. (eg Firefox 3.5...)
+</audio>
+<br/>
+
+<img alt="" height="500" ,width="500" src="data:image/png;base64,{{ data1 }}" />
+<img alt="" height="500" ,width="500" src="data:image/png;base64,{{ data2 }}" />
+
+
+                     
+                          
+</body></html>
