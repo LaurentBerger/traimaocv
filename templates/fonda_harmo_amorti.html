@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>fréquence fondamentale et harmoniques</title>
+</head>
+<body>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<form action="fonda_harmo_amorti" method=post>{% csrf_token %}
+<div><label>Amortissement du signal<input name="tau" value="{{ tau }}" size="5"></label></div>
+<div><label>Fréquence fondamentale f<input name="f1" value="{{ f1 }}" size="5"></label></div>
+<div><label>Amplitue de la frequence f<input name="A1" value="{{ A1 }}" size="5"></label></div>
+<div><label>Amplitude harmonique 2<input name="A2" value="{{ A2 }} "size="5"></label></div>
+<div><label>Amplitude harmonique 3<input name="A3" value="{{ A3 }}" size="5"></label></div>
+<div><label>Amplitude harmonique 4<input name="A4" value="{{ A4 }}" size="5"></label></div>
+<div><label>Amplitude harmonique 5<input name="A5" value="{{ A5 }}" size="5"></label></div>
+<div><input type="submit" value="Plot curve"></div>
+</form>
+Resultats<br />
+<audio controls  autoplay >
+<source src="data:audio/x-wav;base64,{{ data_snd }}" />
+      You need a HTML5 compliant web browser. (eg Firefox 3.5...)
+</audio>
+<br/>
+
+<img alt="" height="300" ,width="300" src="data:image/png;base64,{{ data1 }}" />
+<img alt="" height="300" ,width="300" src="data:image/png;base64,{{ data2 }}" />
+
+
+</body>
+</html>
