@@ -30,6 +30,7 @@ urlpatterns = [
     path('index/exo_trans_simil', views.exo_trans_simil,name="exo_trans_simil"),
     path('index/simul_sf', views.simul_sf,name="simul_sf"),
     path('index/tf_signal_amorti', views.tf_signal_amorti,name="tf_signal_amorti"),
+    path('index/tf_chirp_lin', views.tf_chirp_lin,name="tf_chirp_lin"),
     path('index/fonda_harmo', views.fonda_harmo,name="fonda_harmo"),
     path('index/fonda_harmo_amorti', views.fonda_harmo_amorti,name="fonda_harmo_amorti"),
     path('index/', views.index,name="index"),

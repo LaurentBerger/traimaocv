@@ -9,6 +9,7 @@ import io
 import urllib, base64
 from django.http import HttpResponse
 from scipy.io.wavfile import write
+from scipy.signal import chirp
 
 def get_arg_post(request, list_var):
     """
@@ -314,26 +315,18 @@ class TFSignalAmorti:
         self.request = request
         self.memory = buf_memory
 
-    def __call__(self):
-        var_list = ['f1', 'tau']
-        f1, tau = 220, 10
-        b_ok, val = get_arg_post(self.request, var_list)
-        if b_ok:
-            f1 = float(val[0])
-            tau = float(val[1])
-        Fe = 11025
-        t = np.arange(0, 1, 1 / Fe)
-        y = np.exp(-t * tau) * np.sin(2 * np.pi * f1 * t)
-        urs =  convert_npson_uri(y, Fe)
+    def graphique1(self, t, y, nom_signal):
         fig, ax = plt.subplots(nrows=1, ncols=1)
-        txt_latex = '$ s(t)= e^{-a t}\sin(2\pi f_0t) $'
-        ax.plot(t ,y,label=txt_latex)
+        ax.plot(t ,y,label=nom_signal)
         ax.set(xlabel='temps', ylabel='u.a.', title='Signal')
         ax.grid(True)
         ax.legend()
         #convert graph into dtring buffer and then we convert 64 bit code into image
         uri1 = convert_figure_uri(fig)
         plt.close(fig)
+        return uri1
+        
+    def graphique2(self, t, y, Fe):
         S = np.fft.fft(y, axis=0)
         freq = np.fft.fftfreq(t.shape[0])*Fe
         fig, ax = plt.subplots(nrows=1, ncols=1)
@@ -344,12 +337,53 @@ class TFSignalAmorti:
         ax.legend()
         uri2 = convert_figure_uri(fig)
         plt.close(fig)
+        return uri2
+        
+    def __call__(self):
+        var_list = ['f1', 'tau']
+        f1, tau = 220, 10
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            f1 = float(val[0])
+            tau = float(val[1])
+        Fe = 11025
+        t = np.arange(0, 1, 1 / Fe)
+        y = np.exp(-t * tau) * np.sin(2 * np.pi * f1 * t)
+        uri1 = self.graphique1(t, y, '$ s(t)= e^{-a t}\sin(2\pi f_0t) $')
+        uri2 = self.graphique1(t, y, Fe)
+        urs =  convert_npson_uri(y, Fe)
 
         return 'tf_signal_amorti.html', {'tau': tau, 'f1': f1,
                                          'data1': uri1,
                                          'data2': uri2,
                                          'data_snd': urs}
-                                  
+
+class TFChirpLin(TFSignalAmorti):
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+
+        
+    def __call__(self):
+        var_list = ['f0', 'f1']
+        f0, f1 = 100, 1000
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            f0 = float(val[0])
+            f1 = float(val[1])
+        Fe = 11025
+        t = np.arange(0, 1, 1 / Fe)
+        y = chirp(t, f0=f0, f1=f1, t1=max(t), method='linear')
+        uri1 = self.graphique1(t, y, '$ chirp$')
+        uri2 = self.graphique2(t, y, Fe)
+        urs =  convert_npson_uri(y, Fe)
+
+        return 'tf_chirp_lin.html', {'f0': f0, 'f1': f1,
+                                         'data1': uri1,
+                                         'data2': uri2,
+                                         'data_snd': urs}
+
+                                         
 class FondaHarmo:
     def __init__(self, request=None, buf_memory=True):
         self.request = request

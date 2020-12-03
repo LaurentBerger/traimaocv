@@ -41,6 +41,11 @@ def simul_sf(request):
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
+def tf_chirp_lin(request):
+    a = cts.TFChirpLin(request)()
+    return render(request,a[0], a[1])
+
+@xframe_options_exempt
 def tf_signal_amorti(request):
     a = cts.TFSignalAmorti(request)()
     return render(request,a[0], a[1])
