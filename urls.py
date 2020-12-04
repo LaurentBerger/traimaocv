@@ -33,6 +33,7 @@ urlpatterns = [
     path('index/tf_chirp_lin', views.tf_chirp_lin,name="tf_chirp_lin"),
     path('index/fonda_harmo', views.fonda_harmo,name="fonda_harmo"),
     path('index/fonda_harmo_amorti', views.fonda_harmo_amorti,name="fonda_harmo_amorti"),
+    path('index/echantillonnage_ex1', views.echantillonnage_ex1,name="echantillonnage_ex1"),
     path('index/', views.index,name="index"),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.ico')),
 ]

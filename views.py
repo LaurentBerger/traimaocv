@@ -57,7 +57,11 @@ def fonda_harmo(request):
 
 @xframe_options_exempt
 def fonda_harmo_amorti(request):
-#    a = cts.FondaHarmoAmorti(request).create_page()
     a = cts.FondaHarmoAmorti(request)()
+    return render(request,a[0], a[1])
+
+@xframe_options_exempt
+def echantillonnage_ex1(request):
+    a = cts.EchantillonnageEx1(request)()
     return render(request,a[0], a[1])
 

@@ -1,0 +1,21 @@
+<body>
+<TITLE>Echantillonnage d'un signal</TITLE>
+<html>
+Le signal est composé de deux fréquences, 220 et 277.2 Hz de même amplitude. Vous pouvez fixer la fréquence d'échantillonnage dans la case Fe (>100Hz) et voir une partie du signal échantillonné et l'écouter.</br>
+<form action="echantillonnage_ex1" method="post">{% csrf_token %}
+<div><label>Frequence Fe<input name="Fe" size="5" value="{{ Fe }}"></label></div>
+<div><input type="submit" value="Calculer" onclick="this.disabled=true;this.value='Calcul en cours';" width="200" height="200"> </div>
+</form>
+Resultats<br />
+<audio controls  autoplay >
+<source src="data:audio/x-wav;base64,{{ data_snd }}" />
+      You need a HTML5 compliant web browser. (eg Firefox 3.5...)
+</audio>
+<br/>
+
+<img alt="" height="500" ,width="500" src="data:image/png;base64,{{ data1 }}" /></br>
+
+{{ tableau }}
+</body>
+</html>
+                     

@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.utils.safestring import mark_safe
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -32,6 +33,25 @@ def get_arg_post(request, list_var):
     else:
         return False, []
     return True, resultat
+
+def TableauHtml(titreTab, titreLig, titreCol, x):
+    nbl, nbc = x.shape
+    texte = '<table align=center border=1><caption>' + titreTab + '<caption><tr>'
+    if len(titreCol)>0:
+        ligne = '<tr>'
+        for j in range(0, nbc+1):
+            ligne = ligne + '<td>' + titreCol[j] + '</td>';
+    texte = texte + ligne + '</tr>'
+    for i in range(0, nbl):
+        ligne='<tr>';
+        if len(titreLig)>0:
+            ligne = ligne + '<td>' + titreLig[i] + '</td>'
+        for j in range(0, nbc):
+            ligne = ligne + '<td>' +str(x[i,j]) + '</td>'
+        texte = texte + ligne + '</tr>'
+    texte = texte + '</table>'
+    return texte
+
     
 def convert_figure_uri(fig):
     """
@@ -486,3 +506,45 @@ class FondaHarmoAmorti(FondaHarmo):
                                           'data1': uri1,
                                           'data2': uri2,
                                           'data_snd': urs}
+                                          
+class EchantillonnageEx1:
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+
+    def __call__(self):
+        var_list = ['Fe']
+        Fe = 1000
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            Fe = np.int(max(np.abs(float(val[0])),100))
+        N = min(np.log(Fe) / np.log(2), 1024)
+        te = np.arange(0, 2 ** N -1) / Fe
+        t = np.arange(0, 50 * 2 ** N -1) / (50 * Fe)
+        nu1 = 220
+        nu2 = 220 * 2 **(1/3)
+        
+        y = 30 * (np.sin( 2 * np.pi * nu1 * t) + np.sin( 2 * np.pi * nu2 * t))
+        ye = 30* (np.sin( 2 * np.pi * nu1 * te) + np.sin( 2 * np.pi * nu2 * te))
+        x = np.zeros(shape=(3, int(2 ** N -1)),dtype=np.float32)
+        x[0, :] = te
+        x[1, :] = ye
+        x[2, :] = np.floor(ye)
+        indte = np.where(np.logical_and(te > 3 / nu1, te < 6 / nu1))
+        indt = np.where(np.logical_and(t > 3 / nu1, t < 6 / nu1))
+        fig, ax = plt.subplots(nrows=1, ncols=1)
+        txt_latex = 'Signal continu'
+        ax.plot(t[indt] , y[indt], label=txt_latex)
+        txt_latex = 'Signal échantillonné'
+        ax.scatter(te[indte] , np.floor(ye[indte]), label=txt_latex,marker="o", color='r')
+        ax.set(xlabel='temps', ylabel='u.a.')
+        ax.grid(True)
+        ax.legend()
+        uri1 = convert_figure_uri(fig)
+        plt.close(fig)    #convert graph into dtring buffer and then we convert 64 bit code into image
+        urs = convert_npson_uri(ye/80, Fe)
+        titre_col =[str(v) for v in indte[0]]
+        titre_col.insert(0,'k')
+        tableau = TableauHtml(' ',['temps',' valeurs analogiques',' valeurs échantillonnées'],titre_col,x[:, indte[0]])
+        
+        return 'echantillonnage_ex1.html', {'Fe': Fe, 'data1': uri1, 'data_snd': urs, 'tableau':mark_safe(tableau)}
