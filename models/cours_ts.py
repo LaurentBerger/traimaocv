@@ -519,7 +519,7 @@ class EchantillonnageEx1:
         if b_ok:
             Fe = np.int(max(np.abs(float(val[0])),100))
         N = min(np.log(Fe) / np.log(2), 1024)
-        te = np.arange(0, 2 ** N -1) / Fe
+        te = np.arange(0, int(2 ** N -1)) / Fe
         t = np.arange(0, 50 * 2 ** N -1) / (50 * Fe)
         nu1 = 220
         nu2 = 220 * 2 **(1/3)
