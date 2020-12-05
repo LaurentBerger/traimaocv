@@ -1,0 +1,37 @@
+<body>
+<TITLE>Echantillonnage et reconstruction du signal</TITLE>
+<html>
+Le signal est composé de deux fréquences, 220 et 277.2 Hz de même amplitude. Vous pouvez fixer la fréquence d'échantillonnage dans la case Fe (>100Hz) et voir une partie du signal échantillonné et l'écouter.</br>
+<form action="echantillonnage_ex2" method = post>{% csrf_token %}
+<div><label>Fe<input name="Fe" size="5" value="{{ Fe }}">Hz</label></div>
+<div><input type="submit" width="200" height="200" value="Calculer" onclick="this.disabled=true;this.value='Calcul en cours';"> </div>
+</form>
+<table >
+<tr><td>
+Signal original</td>
+<td>
+Signal audio échantillonné</td></tr>
+<tr><td>
+<audio controls  autoplay >
+<source title="original" src="data:audio/x-wav;base64,{{ data_snd1 }}" />
+      You need a HTML5 compliant web browser. (eg Firefox 3.5...)
+</audio>
+</td><td>
+<audio controls  autoplay >
+<source title="sampling" src="data:audio/x-wav;base64,{{ data_snd2 }}" />
+      You need a HTML5 compliant web browser. (eg Firefox 3.5...)
+</audio></td>
+</tr><td>
+<img alt="" height="400" width="400" title="signal original" src="data:image/png;base64,{{ data1 }}" />
+</td><td>
+<img alt="" height="400" width="400" alt="reconstruction du signal" title="reconstruction du signal" src="data:image/png;base64,{{ data2 }}" /></td>
+</tr>
+<tr>
+<td>Histogramme de l'erreur de reconstruction</td>
+<td>
+<img alt="" height="400" width="400" alt="Erreur reconstruction" title="Erreur reconstruction" src="data:image/png;base64,{{ data3 }}" /></br>
+</td></tr></table>
+</body>
+</html>
+                     
+                          

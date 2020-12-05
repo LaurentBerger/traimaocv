@@ -94,6 +94,19 @@ def porte(t):
     y[ind]=0
     return y
 
+def  reconstruction(tpsContinu,taille,Fe,x):
+    N = x.shape[0]
+    tr = tpsContinu
+    k = np.array([*range(0,N)])
+    f = []
+    for t_ext in tr:
+        k2 = np.argmin(abs(t_ext-k / Fe))
+        k1 = np.array([*range(max( k2-taille,0), min(k2+taille,N-1))])
+        yr =  Fe * (t_ext - k1 / Fe)
+        sincy = np.sinc(yr)
+        f.append(np.sum(x[k1] * sincy))
+    return np.array(f)
+    
 class Frequence:
     """
     Affichage du graphique d'un sinus en fonction 
@@ -194,7 +207,7 @@ class FreqSpatiale2d:
 
     def __call__(self):
         nu = 0.01
-        b_ok, val = get_arg_post(self.request, ['a', 't0'])
+        b_ok, val = get_arg_post(self.request, ['nu'])
         if b_ok:
             nu = float(val[0])
         fig, ax = plt.subplots(nrows=1, ncols=1)
@@ -511,6 +524,61 @@ class EchantillonnageEx1:
     def __init__(self, request=None, buf_memory=True):
         self.request = request
         self.memory = buf_memory
+        self.nu1 = 220
+        self.nu2 = 220 * 2 **(1/3)
+        
+    def genere_ref(self, Fe):
+        N = min(np.log(Fe) / np.log(2), 1024)
+        te = np.arange(0, Fe) / Fe
+        t = np.arange(0, 22050) / 22050
+        
+        y = 30 * (np.sin( 2 * np.pi * self.nu1 * t) + np.sin( 2 * np.pi * self.nu2 * t))
+        ye = 30* (np.sin( 2 * np.pi * self.nu1 * te) + np.sin( 2 * np.pi * self.nu2 * te))
+        x = np.zeros(shape=(3, te.shape[0]),dtype=np.float32)
+        x[0, :] = te
+        x[1, :] = ye
+        x[2, :] = np.floor(ye)
+        return t, x, y
+        
+    def graphique1(self, x, y, t, indte, indt):
+        fig, ax = plt.subplots(nrows=1, ncols=1)
+        txt_latex = 'Signal continu'
+        ax.plot(t[indt] , y[indt], label=txt_latex)
+        txt_latex = 'Signal échantillonné'
+        ax.scatter(x[0, indte] , np.floor(x[1, indte]), label=txt_latex,marker="o", color='r')
+        ax.set(xlabel='temps', ylabel='u.a.')
+        for v in indte: 
+            ax.vlines(x[0, v], 0, np.floor(x[1, v]), colors='red', linestyles='dashed')
+        ax.grid(True)
+        ax.legend()
+        uri1 = convert_figure_uri(fig)
+        plt.close(fig)    #convert graph into dtring buffer and then we convert 64 bit code into image
+        return uri1
+        
+    def __call__(self):
+        var_list = ['Fe']
+        Fe = 1000
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            Fe = np.int(max(np.abs(float(val[0])),100))
+        t, x, y = self.genere_ref(Fe)
+        
+        indte = np.where(np.logical_and(x[0, :] > 3 / self.nu1, x[0, :] < 6 / self.nu1))
+        indt = np.where(np.logical_and(t > 3 / self.nu1, t < 6 / self.nu1))
+        uri1 = self.graphique1(x, y, t, indte, indt)
+        urs = convert_npson_uri(x[1, :]/80, Fe)
+        titre_col =[str(v) for v in indte[0]]
+        titre_col.insert(0,'k')
+        tableau = TableauHtml(' ',['temps',' valeurs analogiques',' valeurs échantillonnées'],titre_col,x[:, indte[0]])
+        
+        return 'echantillonnage_ex1.html', {'Fe': Fe, 'data1': uri1, 'data_snd': urs, 'tableau':mark_safe(tableau)}
+
+class EchantillonnageEx2(EchantillonnageEx1):
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+        self.nu1 = 220
+        self.nu2 = 220 * 2 **(1/3)
 
     def __call__(self):
         var_list = ['Fe']
@@ -518,33 +586,30 @@ class EchantillonnageEx1:
         b_ok, val = get_arg_post(self.request, var_list)
         if b_ok:
             Fe = np.int(max(np.abs(float(val[0])),100))
-        N = min(np.log(Fe) / np.log(2), 1024)
-        te = np.arange(0, int(2 ** N -1)) / Fe
-        t = np.arange(0, 50 * 2 ** N -1) / (50 * Fe)
-        nu1 = 220
-        nu2 = 220 * 2 **(1/3)
-        
-        y = 30 * (np.sin( 2 * np.pi * nu1 * t) + np.sin( 2 * np.pi * nu2 * t))
-        ye = 30* (np.sin( 2 * np.pi * nu1 * te) + np.sin( 2 * np.pi * nu2 * te))
-        x = np.zeros(shape=(3, int(2 ** N -1)),dtype=np.float32)
-        x[0, :] = te
-        x[1, :] = ye
-        x[2, :] = np.floor(ye)
-        indte = np.where(np.logical_and(te > 3 / nu1, te < 6 / nu1))
-        indt = np.where(np.logical_and(t > 3 / nu1, t < 6 / nu1))
+        t, x, y = self.genere_ref(Fe)
+        indte = np.where(np.logical_and(x[0, :] > 3 / self.nu1, x[0, :] < 6 / self.nu1))
+        indt = np.where(np.logical_and(t > 3 / self.nu1, t < 6 / self.nu1))
+        uri1 = self.graphique1(x, y, t, indte, indt)
+        urs1 = convert_npson_uri(y / 80 , 22050)
+        urs2 = convert_npson_uri(x[1, :]/80, Fe)
+        yr = reconstruction(t[indt[0]],40,Fe,x[1,:])
         fig, ax = plt.subplots(nrows=1, ncols=1)
-        txt_latex = 'Signal continu'
-        ax.plot(t[indt] , y[indt], label=txt_latex)
-        txt_latex = 'Signal échantillonné'
-        ax.scatter(te[indte] , np.floor(ye[indte]), label=txt_latex,marker="o", color='r')
+        txt_latex = 'Signal reconstruit'
+        ax.plot(t[indt] , yr, label=txt_latex)
+        txt_latex = 'Signal échnatillonné'
+        ax.scatter(x[0, indte] , np.floor(x[1, indte]), label=txt_latex,marker="o", color='r')
         ax.set(xlabel='temps', ylabel='u.a.')
+        for v in indte: 
+            ax.vlines(x[0, v], 0, np.floor(x[1, v]), colors='red', linestyles='dashed')
         ax.grid(True)
         ax.legend()
-        uri1 = convert_figure_uri(fig)
+        uri2 = convert_figure_uri(fig)
         plt.close(fig)    #convert graph into dtring buffer and then we convert 64 bit code into image
-        urs = convert_npson_uri(ye/80, Fe)
-        titre_col =[str(v) for v in indte[0]]
-        titre_col.insert(0,'k')
-        tableau = TableauHtml(' ',['temps',' valeurs analogiques',' valeurs échantillonnées'],titre_col,x[:, indte[0]])
-        
-        return 'echantillonnage_ex1.html', {'Fe': Fe, 'data1': uri1, 'data_snd': urs, 'tableau':mark_safe(tableau)}
+        histo_donnees, position_classe = np.histogram(yr - y[indt], 20)
+        fig, ax = plt.subplots(nrows=1, ncols=1)
+        # tracer de l'histogramme en appelant hist
+        ax.hist(position_classe[:-1], position_classe, weights=histo_donnees,edgecolor='black')
+        uri3 = convert_figure_uri(fig)
+        plt.close(fig)
+        return 'reconstruction.html', {'Fe': Fe, 'data1': uri1, 'data2': uri2, 'data3':uri3,
+                                       'data_snd1': urs1, 'data_snd2': urs2}
