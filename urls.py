@@ -35,6 +35,11 @@ urlpatterns = [
     path('index/fonda_harmo_amorti', views.fonda_harmo_amorti,name="fonda_harmo_amorti"),
     path('index/echantillonnage_ex1', views.echantillonnage_ex1,name="echantillonnage_ex1"),
     path('index/echantillonnage_ex2', views.echantillonnage_ex2,name="echantillonnage_ex2"),
+    path('index/echantillonnage_ex3', views.echantillonnage_ex3,name="echantillonnage_ex3"),
+    path('index/can_exo', views.can_exo,name="can_exo"),
+    path('index/cna_exo', views.cna_exo,name="cna_exo"),
+    path('index/convol_exo1', views.convol_exo1,name="convol_exo1"),
+    path('index/convol_exo2', views.convol_exo2,name="convol_exo2"),
     path('index/', views.index,name="index"),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.ico')),
 ]

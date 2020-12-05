@@ -1,0 +1,18 @@
+<body>
+<TITLE>Echantillonnage d'un signal</TITLE>
+<html>
+<form action="echantillonnage_ex3" method="post">{% csrf_token %}
+<div><label>Frequence Fe<input name="Fe" size="5" value="{{ Fe }}"></label></div>
+<div><input type="submit" value="Calculer" onclick="this.disabled=true;this.value='Calcul en cours';" width="200" height="200"> </div>
+</form>
+Le signal est composé de deux fréquences, 220 et 277.2 Hz de même amplitude. Vous pouvez fixer la fréquence d'échantillonnage dans la case Fe. Le résultat donne la position des deux fréquences dans le spectre du signal échantillonné en utilisant deux règles :</br>
+<ul>
+<li>le spectre est périodique de période Fe;</li>
+<li>le signal est composé de nombres réel donc le module du spectre est pair.</li>
+</ul>
+Dans le tableau suivant, il faut retenir les raies entre 0 et Fe/2<br />
+
+{{ tableau }}
+</body>
+</html>
+                     

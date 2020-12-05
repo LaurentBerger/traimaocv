@@ -70,3 +70,28 @@ def echantillonnage_ex2(request):
     a = cts.EchantillonnageEx2(request)()
     return render(request,a[0], a[1])
 
+@xframe_options_exempt
+def echantillonnage_ex3(request):
+    a = cts.EchantillonnageEx3(request)()
+    return render(request,a[0], a[1])
+
+@xframe_options_exempt
+def can_exo(request):
+    a = cts.CANExo(request)()
+    return render(request,a[0], a[1])
+
+@xframe_options_exempt
+def cna_exo(request):
+    a = cts.CNAExo(request)()
+    return render(request,a[0], a[1])
+
+@xframe_options_exempt
+def convol_exo1(request):
+    a = cts.ConvolEx1(request)()
+    return render(request,a[0], a[1])
+
+@xframe_options_exempt
+def convol_exo2(request):
+    a = cts.ConvolEx2(request)()
+    return render(request,a[0], a[1])
+

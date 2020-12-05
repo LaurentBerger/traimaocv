@@ -34,7 +34,7 @@ def get_arg_post(request, list_var):
         return False, []
     return True, resultat
 
-def TableauHtml(titreTab, titreLig, titreCol, x):
+def TableauHtml(titreTab, titre_lig, titreCol, x):
     nbl, nbc = x.shape
     texte = '<table align=center border=1><caption>' + titreTab + '<caption><tr>'
     if len(titreCol)>0:
@@ -44,8 +44,8 @@ def TableauHtml(titreTab, titreLig, titreCol, x):
     texte = texte + ligne + '</tr>'
     for i in range(0, nbl):
         ligne='<tr>';
-        if len(titreLig)>0:
-            ligne = ligne + '<td>' + titreLig[i] + '</td>'
+        if titre_lig and len(titre_lig)>0:
+            ligne = ligne + '<td>' + titre_lig[i] + '</td>'
         for j in range(0, nbc):
             ligne = ligne + '<td>' +str(x[i,j]) + '</td>'
         texte = texte + ligne + '</tr>'
@@ -613,3 +613,176 @@ class EchantillonnageEx2(EchantillonnageEx1):
         plt.close(fig)
         return 'reconstruction.html', {'Fe': Fe, 'data1': uri1, 'data2': uri2, 'data3':uri3,
                                        'data_snd1': urs1, 'data_snd2': urs2}
+
+class EchantillonnageEx3(EchantillonnageEx1):
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+        self.nu1 = 220
+        self.nu2 = np.int(220 * 2 **(1/3)*100)/100
+
+    def __call__(self):
+        var_list = ['Fe']
+        Fe = 1000
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            Fe = np.int(max(np.abs(float(val[0])),100))
+        x1 = []
+        x2 = []
+        x3 = []
+        x4 = []
+        titre_col = ['k']
+        for k in range(-3,4):
+            titre_col.append(str(k))
+            x1.append(np.int((self.nu1 + k * Fe)*100)/100)
+            x2.append(self.nu2 + k * Fe)
+            x3.append(-self.nu1 + k * Fe)
+            x4.append(-self.nu2 + k * Fe)
+        x1.sort()    
+        x2.sort()   
+        x = np.array([x1, x2, x3, x4])
+        print(x.shape)
+        print(len(titre_col))
+        tableau = TableauHtml(' ',
+                              ['position de la raie ' + str(self.nu1) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(-self.nu1) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(self.nu2) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(-self.nu2) + 'Hz pour k*Fe',
+                               ],
+                              titre_col, x)
+        return 'echantillonnage_ex3.html', {'Fe': Fe, 'tableau':mark_safe(tableau)}
+
+class CNAExo():
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+
+    def __call__(self):
+        var_list = ['n', 'UMin', 'UMax', 'N']
+        n = 13107
+        umin = -5
+        umax = 5
+        N = 16
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            n = float(val[0])
+            umin = float(val[1])
+            umax = float(val[2])
+            N = int(val[3])
+            n = max(min(n, 2 **(N-1) - 1), -2 ** (N - 1))
+        vout = n / 2 ** N * (umax - umin)
+        x = np.array([[N, umin, umax, n, vout]])
+        tableau = TableauHtml(' ',
+                              ['',''],
+                              ['','N',
+                               'UMin',
+                               'UMax',
+                               "Valeur numérique d'entrée",
+                               "Valeur de sortie du CNA en V"
+                               ], x)
+        return 'cna_exo.html', {'n': n, 'UMin': umin, 'UMax': umax, 'N':N, 'tableau':mark_safe(tableau)}
+
+class CANExo():
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+
+    def __call__(self):
+        var_list = ['vin', 'UMin', 'UMax', 'N']
+        vin = 2
+        umin = -5
+        umax = 5
+        N = 16
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            vin = float(val[0])
+            umin = float(val[1])
+            umax = float(val[2])
+            N = int(val[3])
+        n = max(min(np.floor(2**N*vin/(umax-umin)),2**(N-1)-1),-2**(N-1))
+        x = np.array([[N, umin, umax, vin, n]])
+        tableau = TableauHtml(' ',
+                              ['',''],
+                              ['','N',
+                               'UMin',
+                               'UMax',
+                               "Tension d'entrée",
+                               "Valeur en sortie du CAN"
+                               ], x)
+        return 'can_exo.html', {'vin': vin, 'UMin': umin, 'UMax': umax, 'N':N, 'tableau':mark_safe(tableau)}
+
+class ConvolExo1():
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+        self.nu1 = 220
+        self.nu2 = np.int(220 * 2 **(1/3)*100)/100
+
+    def __call__(self):
+        var_list = ['Fe']
+        Fe = 1000
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            Fe = np.int(max(np.abs(float(val[0])),100))
+        x1 = []
+        x2 = []
+        x3 = []
+        x4 = []
+        titre_col = ['k']
+        for k in range(-3,4):
+            titre_col.append(str(k))
+            x1.append(np.int((self.nu1 + k * Fe)*100)/100)
+            x2.append(self.nu2 + k * Fe)
+            x3.append(-self.nu1 + k * Fe)
+            x4.append(-self.nu2 + k * Fe)
+        x1.sort()    
+        x2.sort()   
+        x = np.array([x1, x2, x3, x4])
+        print(x.shape)
+        print(len(titre_col))
+        tableau = TableauHtml(' ',
+                              ['position de la raie ' + str(self.nu1) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(-self.nu1) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(self.nu2) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(-self.nu2) + 'Hz pour k*Fe',
+                               ],
+                              titre_col, x)
+        return 'echantillonnage_ex3.html', {'Fe': Fe, 'tableau':mark_safe(tableau)}
+
+class ConvolExo2():
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+        self.nu1 = 220
+        self.nu2 = np.int(220 * 2 **(1/3)*100)/100
+
+    def __call__(self):
+        var_list = ['Fe']
+        Fe = 1000
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            Fe = np.int(max(np.abs(float(val[0])),100))
+        x1 = []
+        x2 = []
+        x3 = []
+        x4 = []
+        titre_col = ['k']
+        for k in range(-3,4):
+            titre_col.append(str(k))
+            x1.append(np.int((self.nu1 + k * Fe)*100)/100)
+            x2.append(self.nu2 + k * Fe)
+            x3.append(-self.nu1 + k * Fe)
+            x4.append(-self.nu2 + k * Fe)
+        x1.sort()    
+        x2.sort()   
+        x = np.array([x1, x2, x3, x4])
+        print(x.shape)
+        print(len(titre_col))
+        tableau = TableauHtml(' ',
+                              ['position de la raie ' + str(self.nu1) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(-self.nu1) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(self.nu2) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(-self.nu2) + 'Hz pour k*Fe',
+                               ],
+                              titre_col, x)
+        return 'echantillonnage_ex3.html', {'Fe': Fe, 'tableau':mark_safe(tableau)}

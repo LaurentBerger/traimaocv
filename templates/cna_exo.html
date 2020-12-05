@@ -1,0 +1,17 @@
+<body>
+<TITLE>Conversion Numérique/Analogique</TITLE>
+<html>
+<form action="can_exo" method = post>{% csrf_token %}
+<div><label>Valeur entière d'entrée du CNA<input name="n" size="5" value="{{ n }}" ></label></div>
+<div><label>Nombre de bits du convertisseur (entre 1 et 32)<input name="N" size="5" value="{{ N }}"></label></div>
+<div><label>Domaine de fonctionnement UMin<input name="UMin" size="5" value="{{ UMin }}">V</label></div>
+<div><label>Domaine de fonctionnement UMax<input name="UMax" size="5" value="{{ UMax }}">V</label></div>
+<div><input type="submit" style="display: none" /> </div>
+</form>
+<br />
+{{ tableau }} 
+<br>
+</body>
+</html>
+                     
+                          
