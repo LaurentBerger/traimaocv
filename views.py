@@ -87,11 +87,11 @@ def cna_exo(request):
 
 @xframe_options_exempt
 def convol_exo1(request):
-    a = cts.ConvolEx1(request)()
+    a = cts.ConvolExo1(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def convol_exo2(request):
-    a = cts.ConvolEx2(request)()
+    a = cts.ConvolExo2(request)()
     return render(request,a[0], a[1])
 

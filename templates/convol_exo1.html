@@ -1,0 +1,14 @@
+<body>
+<html>
+<TITLE>Convolution d'un signal</TITLE>
+<html>
+<form action="./convol_exo1" method = post>{% csrf_token %}
+<label>Nombre de valeurs du signal<input name="N" size="5" value="{{ N }}"></label>
+<div><input type="submit" style="display: none" /> </div>
+</form>
+<br>
+{{ tableau }} 
+<br>
+<img src="data:image/png;base64,{{ data }}" alt="" height="500" ,width="500">
+</body>
+</html>

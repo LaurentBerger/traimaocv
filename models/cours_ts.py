@@ -715,74 +715,45 @@ class ConvolExo1():
     def __init__(self, request=None, buf_memory=True):
         self.request = request
         self.memory = buf_memory
-        self.nu1 = 220
-        self.nu2 = np.int(220 * 2 **(1/3)*100)/100
+        self.h =  np.array([1,3, 2])
 
     def __call__(self):
-        var_list = ['Fe']
-        Fe = 1000
+        var_list = ['N']
+        N = 10
         b_ok, val = get_arg_post(self.request, var_list)
         if b_ok:
-            Fe = np.int(max(np.abs(float(val[0])),100))
-        x1 = []
-        x2 = []
-        x3 = []
-        x4 = []
+            N = int(val[0])
+        x = np.random.randint(11, size=N)-5
+        y = np.convolve(self.h,x)
+        xx =  np.zeros((3,y.shape[0]))
+        xx[0,0:N] = x 
+        xx[1,0:self.h.shape[0]] = self.h
+        xx[2] = y
         titre_col = ['k']
-        for k in range(-3,4):
+        for k in range(0,y.shape[0]):
             titre_col.append(str(k))
-            x1.append(np.int((self.nu1 + k * Fe)*100)/100)
-            x2.append(self.nu2 + k * Fe)
-            x3.append(-self.nu1 + k * Fe)
-            x4.append(-self.nu2 + k * Fe)
-        x1.sort()    
-        x2.sort()   
-        x = np.array([x1, x2, x3, x4])
-        print(x.shape)
-        print(len(titre_col))
         tableau = TableauHtml(' ',
-                              ['position de la raie ' + str(self.nu1) + 'Hz pour k*Fe',
-                               'position de la raie ' + str(-self.nu1) + 'Hz pour k*Fe',
-                               'position de la raie ' + str(self.nu2) + 'Hz pour k*Fe',
-                               'position de la raie ' + str(-self.nu2) + 'Hz pour k*Fe',
-                               ],
-                              titre_col, x)
-        return 'echantillonnage_ex3.html', {'Fe': Fe, 'tableau':mark_safe(tableau)}
+                              ['x','h','x*h'],
+                              titre_col,
+                              xx)
+        fig, ax = plt.subplots(nrows=1, ncols=1)
+        txt_latex = 'Signal x'
+        ax.scatter(range(0,x.shape[0]) , x, label=txt_latex, color='red')
+        txt_latex = '(x*h)(i)'
+        ax.scatter(range(0,y.shape[0]) , y, label=txt_latex, color='blue')
+        for idx, v in enumerate(x): 
+            ax.vlines(idx, 0, v, color='red', linestyles='dashed')
+        for idx, v in enumerate(y): 
+            ax.vlines(idx, 0, v, color='blue', linestyles='dashed')
+        ax.grid(True)
+        ax.legend()
+        uri = convert_figure_uri(fig)
+        plt.close(fig)    #convert graph into dtring buffer and then we convert 64 bit code into image
+        return 'convol_exo1.html', {'N':N, 'tableau':mark_safe(tableau), 'data':uri}
 
-class ConvolExo2():
+class ConvolExo2(ConvolExo1):
     def __init__(self, request=None, buf_memory=True):
         self.request = request
         self.memory = buf_memory
-        self.nu1 = 220
-        self.nu2 = np.int(220 * 2 **(1/3)*100)/100
+        self.h =  np.array([1, -1])
 
-    def __call__(self):
-        var_list = ['Fe']
-        Fe = 1000
-        b_ok, val = get_arg_post(self.request, var_list)
-        if b_ok:
-            Fe = np.int(max(np.abs(float(val[0])),100))
-        x1 = []
-        x2 = []
-        x3 = []
-        x4 = []
-        titre_col = ['k']
-        for k in range(-3,4):
-            titre_col.append(str(k))
-            x1.append(np.int((self.nu1 + k * Fe)*100)/100)
-            x2.append(self.nu2 + k * Fe)
-            x3.append(-self.nu1 + k * Fe)
-            x4.append(-self.nu2 + k * Fe)
-        x1.sort()    
-        x2.sort()   
-        x = np.array([x1, x2, x3, x4])
-        print(x.shape)
-        print(len(titre_col))
-        tableau = TableauHtml(' ',
-                              ['position de la raie ' + str(self.nu1) + 'Hz pour k*Fe',
-                               'position de la raie ' + str(-self.nu1) + 'Hz pour k*Fe',
-                               'position de la raie ' + str(self.nu2) + 'Hz pour k*Fe',
-                               'position de la raie ' + str(-self.nu2) + 'Hz pour k*Fe',
-                               ],
-                              titre_col, x)
-        return 'echantillonnage_ex3.html', {'Fe': Fe, 'tableau':mark_safe(tableau)}
