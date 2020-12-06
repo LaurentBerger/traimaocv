@@ -95,3 +95,7 @@ def convol_exo2(request):
     a = cts.ConvolExo2(request)()
     return render(request,a[0], a[1])
 
+@xframe_options_exempt
+def intercorr_exo1(request):
+    a = cts.IntercorrExo1(request)()
+    return render(request,a[0], a[1])

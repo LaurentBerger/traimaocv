@@ -1,0 +1,14 @@
+<body>
+<TITLE>Intercorrélation exemple1</TITLE>
+<html>
+<form action="./intercorr_exo1" method = post>{% csrf_token %}
+<div><label>Origine des temps pour le signal x</label><input name="ori_x" size="5" value="{{ ori_x }}"></div>
+<div><label>Origine des temps pour le signal y</label> <input name="ori_y" size="5" value="{{ ori_y }}"></div>
+<div><input type="submit" style="display: none" /> </div>
+</form>
+<br>
+{{ tableau }} 
+<br>
+<img src="data:image/png;base64,{{ data }}" alt="" height="400" ,width="400">
+</body>
+</html>

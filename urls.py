@@ -40,6 +40,7 @@ urlpatterns = [
     path('index/cna_exo', views.cna_exo,name="cna_exo"),
     path('index/convol_exo1', views.convol_exo1,name="convol_exo1"),
     path('index/convol_exo2', views.convol_exo2,name="convol_exo2"),
+    path('index/intercorr_exo1', views.intercorr_exo1,name="intercorr_exo1"),
     path('index/', views.index,name="index"),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.ico')),
 ]

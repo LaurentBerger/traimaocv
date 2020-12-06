@@ -757,3 +757,103 @@ class ConvolExo2(ConvolExo1):
         self.memory = buf_memory
         self.h =  np.array([1, -1])
 
+class IntercorrExo1():
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+        self.ori_x = 0
+        self.ori_y = 0
+        self.x = np.array([[*range(self.ori_x, 8 + self.ori_x)],[1, 1, -1, -1, 1, 1, -1, -1]])
+        self.y = np.array([[*range(self.ori_y, 4 + self.ori_y)],
+                          [1, 1, -1, -1]])
+ 
+    def intercorr(self, x,y):
+        """
+        Intercorrélation de x par y
+        Si x et y ont deux lignes 
+        la premère ligne représente le temps
+        la seconde ligne la valeur au temps donné
+        dans les autres cas l'origine des temps est supposé 0
+        """
+        nblx, nbcx = x.shape
+        nbly, nbcy = y.shape
+        if min(nblx,nbcx) == min(nbcy,nbly) and min(nblx,nbcx)==2:
+            cxy = np.correlate(x[1,:], y[1,:], "full")
+            t_cxy = np.zeros((2,cxy.shape[0]))
+            t_cxy[1,:] = cxy
+            indx = np.where(x[1,:] != 0)
+            indy = np.where(y[1,:] != 0)
+            t_cxy[0, :] = np.arange(x[0,min(indx[0])] - y[0, max(indy[0])],
+                                    x[0,max(indx[0])] - y[0, min(indy[0])] + 1)
+        elif min(nblx,nbcx) == min(nbcy,nbly) and min(nblx,nbcx) == 1:
+            cxy = np.correlate(x, y, "full")
+            t_cxy = np.zeros((2,cxy.shape[0]))
+            t_cxy[1,:] = cxy
+            t_cxy[0,:] = np.arange(-y.shape[0], x.shape[0]);
+        else:
+            t_cxy = None
+        return t_cxy
+
+
+    def __call__(self):
+        var_list = ['ori_x', 'ori_y']
+        N = 10
+        b_ok, val = get_arg_post(self.request, var_list)
+        if b_ok:
+            self.ori_x = int(val[0])
+            self.ori_y = int(val[1])
+        self.x[0,:] = self.x[0,:] + self.ori_x
+        self.y[0,:] = self.y[0,:] + self.ori_y
+        cxy = self.intercorr(self.x, self.y)
+        titre_col = ['k']
+        xx = [[],[],[]]
+        deb = int(min(cxy[0,0],self.x[0,0],self.y[0,0]))
+        fin = int(max(cxy[0,-1],self.x[0,-1],self.y[0,-1]))
+        for k in range(deb,fin+1):
+            titre_col.append(str(k))
+            ind = np.where(self.x[0,:]==k)
+            if ind[0].shape[0]:
+                xx[0].append((self.x[1,ind[0][0]]))
+            else:
+                xx[0].append(0)
+            ind = np.where(self.y[0,:]==k)
+            if ind[0].shape[0]:
+                xx[1].append((self.y[1,ind[0][0]]))
+            else:
+                xx[1].append(0)
+            ind = np.where(cxy[0,:]==k)
+            if ind[0].shape[0]:
+                xx[2].append((cxy[1,ind[0][0]]))
+            else:
+                xx[2].append(0)
+        xx = np.array(xx)
+        tableau = TableauHtml(' ',
+                              ['x','y','cxy'],
+                              titre_col,
+                              np.array(xx))
+        fig, ax = plt.subplots(nrows=3, ncols=1)
+        txt_latex = 'Signal x'
+        val_abs = [*range(deb,fin+1)]
+        ax[0].scatter(val_abs , xx[0, :], label=txt_latex, color='red')
+        for idx, v in enumerate(xx[0, :]): 
+            ax[0].vlines(val_abs[idx], 0, v, color='red', linestyles='dashed')
+        ax[0].grid(True)
+        ax[0].legend()
+        txt_latex = 'Signal y'
+        ax[1].scatter(val_abs , xx[1, :], label=txt_latex, color='blue')
+        for idx, v in enumerate(xx[1, :]): 
+            ax[1].vlines(val_abs[idx], 0, v, color='blue', linestyles='dashed')
+        ax[1].grid(True)
+        ax[1].legend()
+        txt_latex = '$ c_{xy} $'
+        ax[2].scatter(val_abs , xx[2, :], label=txt_latex, color='green')
+        for idx, v in enumerate(xx[2, :]): 
+            ax[2].vlines(val_abs[idx], 0, v, color='green', linestyles='dashed')
+        ax[2].grid(True)
+        ax[2].legend()
+        ax[2].set(xlabel='temps', ylabel='u.a.')
+        plt.tight_layout()
+        uri = convert_figure_uri(fig)
+        plt.close(fig)    #convert graph into dtring buffer and then we convert 64 bit code into image
+        return 'intercorr_exo1.html', {'ori_x':self.ori_x, 'ori_y':self.ori_y,
+                                       'tableau':mark_safe(tableau), 'data':uri}
