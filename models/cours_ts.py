@@ -645,8 +645,8 @@ class EchantillonnageEx3(EchantillonnageEx1):
         print(len(titre_col))
         tableau = TableauHtml(' ',
                               ['position de la raie ' + str(self.nu1) + 'Hz pour k*Fe',
-                               'position de la raie ' + str(-self.nu1) + 'Hz pour k*Fe',
                                'position de la raie ' + str(self.nu2) + 'Hz pour k*Fe',
+                               'position de la raie ' + str(-self.nu1) + 'Hz pour k*Fe',
                                'position de la raie ' + str(-self.nu2) + 'Hz pour k*Fe',
                                ],
                               titre_col, x)
