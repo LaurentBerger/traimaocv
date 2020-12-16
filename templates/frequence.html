@@ -8,7 +8,7 @@
   <form action="frequence"  method=post enctype="multipart/form-data" >{% csrf_token %}
     Fréquence = <input type="text" name="freq" value="{{ freq }}" /><br>
     Phase = <input type="text" name="phase" value="{{ phase }}" /><br>
-    <input type="submit" value="Plot curve">
+    <input type="submit" style="display: none">
     </form>
     <img src="data:image/png;base64,{{ data }}" alt="" height="500" ,width="500">
   </body>

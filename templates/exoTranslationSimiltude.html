@@ -4,7 +4,7 @@
 <form action="exo_trans_simil" method = post>{% csrf_token %}
 <div><label>Coefficient a<input name="a" value="{{ a_simil }}" size="5"></label></div>
 <div><label>Valeur t<sub>0</sub><input name="t0" value="{{ t0 }}" size="5"></label></div>
-<div><input type="submit" value="Plot curve"></div>
+<div><input type="submit" style="display: none"></div>
 </form>
 Resultats<br />
 <img width="400" vspace="0" hspace="0" height="400" border="0" title="Avant" src="data:image/png;base64,{{ data1 }}" />

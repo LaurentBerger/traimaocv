@@ -36,7 +36,7 @@ def get_arg_post(request, list_var):
 
 def TableauHtml(titreTab, titre_lig, titreCol, x):
     nbl, nbc = x.shape
-    texte = '<table align=center border=1><caption>' + titreTab + '<caption><tr>'
+    texte = '<table align=center border=1><caption>' + titreTab + '</caption>'
     if len(titreCol)>0:
         ligne = '<tr>'
         for j in range(0, nbc+1):
@@ -570,7 +570,7 @@ class EchantillonnageEx1:
         titre_col =[str(v) for v in indte[0]]
         titre_col.insert(0,'k')
         tableau = TableauHtml(' ',['temps',' valeurs analogiques',' valeurs échantillonnées'],titre_col,x[:, indte[0]])
-        
+        print("fini __call__")
         return 'echantillonnage_ex1.html', {'Fe': Fe, 'data1': uri1, 'data_snd': urs, 'tableau':mark_safe(tableau)}
 
 class EchantillonnageEx2(EchantillonnageEx1):
@@ -650,6 +650,8 @@ class EchantillonnageEx3(EchantillonnageEx1):
                                'position de la raie ' + str(-self.nu2) + 'Hz pour k*Fe',
                                ],
                               titre_col, x)
+        print("return echantillonnage_ex3.html",Fe)
+        print(mark_safe(tableau) )
         return 'echantillonnage_ex3.html', {'Fe': Fe, 'tableau':mark_safe(tableau)}
 
 class CNAExo():

@@ -4,7 +4,7 @@
 Le signal est composé de deux fréquences, 220 et 277.2 Hz de même amplitude. Vous pouvez fixer la fréquence d'échantillonnage dans la case Fe (>100Hz) et voir une partie du signal échantillonné et l'écouter.</br>
 <form action="echantillonnage_ex2" method = post>{% csrf_token %}
 <div><label>Fe<input name="Fe" size="5" value="{{ Fe }}">Hz</label></div>
-<div><input type="submit" width="200" height="200" value="Calculer" onclick="this.disabled=true;this.value='Calcul en cours';"> </div>
+<div><input type="submit" style="display: none"> </div>
 </form>
 <table >
 <tr><td>

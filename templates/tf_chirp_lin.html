@@ -5,7 +5,7 @@
 <form action="tf_chirp_lin" method="post">{% csrf_token %}
 <div><label>Frequence à t=0<input name="f0" size="5" value="{{ f0 }}"></label></div>
 <div><label>Fréquence finale<input name="f1" size="5" value="{{ f1 }}"></label></div>
-<div><input type="submit" value="Calculer" onclick="this.disabled=true;this.value='Calcul en cours';" width="200" height="200"> </div>
+<div><input type="submit" style="display: none"> </div>
 </form>
 Resultats<br>
 <audio controls  autoplay >

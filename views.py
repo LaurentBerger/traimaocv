@@ -63,7 +63,10 @@ def fonda_harmo_amorti(request):
 @xframe_options_exempt
 def echantillonnage_ex1(request):
     a = cts.EchantillonnageEx1(request)()
-    return render(request,a[0], a[1])
+    print("suite call")
+    b = render(request,a[0], a[1])
+    print("render fini")
+    return b
 
 @xframe_options_exempt
 def echantillonnage_ex2(request):
@@ -73,6 +76,7 @@ def echantillonnage_ex2(request):
 @xframe_options_exempt
 def echantillonnage_ex3(request):
     a = cts.EchantillonnageEx3(request)()
+    print (a[0])
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
