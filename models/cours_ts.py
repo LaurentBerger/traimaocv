@@ -570,7 +570,6 @@ class EchantillonnageEx1:
         titre_col =[str(v) for v in indte[0]]
         titre_col.insert(0,'k')
         tableau = TableauHtml(' ',['temps',' valeurs analogiques',' valeurs échantillonnées'],titre_col,x[:, indte[0]])
-        print("fini __call__")
         return 'echantillonnage_ex1.html', {'Fe': Fe, 'data1': uri1, 'data_snd': urs, 'tableau':mark_safe(tableau)}
 
 class EchantillonnageEx2(EchantillonnageEx1):
