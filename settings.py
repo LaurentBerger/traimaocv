@@ -40,9 +40,13 @@ ALLOWED_HOSTS = ['*']
 
 
 # Application definition
+# https://stackoverflow.com/questions/63576338/django-check-cookiess-samesite-attribute
+# https://stackoverflow.com/questions/33267383/how-to-configure-x-frame-options-in-django-to-allow-iframe-embedding-of-one-view
+
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None' 
+CSRF_COOKIE_SECURE = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 INSTALLED_APPS = [
