@@ -41,8 +41,9 @@ ALLOWED_HOSTS = ['*']
 
 # Application definition
 SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None' 
-X_FRAME_OPTIONS = 'SAMEORIGIN'
+#X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
