@@ -15,10 +15,14 @@ Including another URLconf
     
  
 """
+from pathlib import Path
+
 from django.apps import apps
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path,include
 from django.views.generic.base import RedirectView
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 import bokeh
 from bokeh.server.django import autoload, directory, document, static_extensions
@@ -26,6 +30,7 @@ from bokeh.server.django import autoload, directory, document, static_extensions
 from . import views
 
 bokeh_app_config = apps.get_app_config('bokeh.server.django')
+print(bokeh_app_config)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -53,3 +58,19 @@ urlpatterns = [
     path("index/my_sea_surface", views.sea_surface_custom_uri),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.ico')),
 ]
+base_path = settings.BASE_PATH
+
+bokeh_apps = [
+    autoload("index/sea_surface", views.sea_surface_handler),
+    document("index/sea_surface_with_template", views.sea_surface_handler_with_template),
+    document("/bokeh_apps/sea_surface", base_path / "traimaocv" / "bokeh_apps" / "sea_surface.py"),
+    document("shape_viewer", views.shape_viewer_handler),
+]
+
+apps_path = Path(bokeh.__file__).parent.parent / "app"
+bokeh_apps += directory(apps_path)
+
+urlpatterns += static_extensions()
+urlpatterns += staticfiles_urlpatterns()
+
+

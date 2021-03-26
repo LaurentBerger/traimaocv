@@ -7,10 +7,21 @@ For more information on this file, see
 https://docs.djangoproject.com/en/3.1/howto/deployment/asgi/
 """
 
-import os
+import os, sys
 
 from django.core.asgi import get_asgi_application
+from channels.routing import get_default_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'traimaocv.settings')
 
-application = get_asgi_application()
+# https://stackoverflow.com/questions/14927345/importerror-no-module-named-django-core-wsgi-apache-virtualenv-aws-wsgi
+# add the hellodjango project path into the sys.path
+sys.path.append('/home/traimaocv/django')
+
+# add the virtualenv site-packages path to the sys.path
+sys.path.append('/home/traimaocv/env_django/lib/python3.8/site-packages')
+
+django.setup()
+
+application = get_default_application()
+#application = get_asgi_application()

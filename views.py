@@ -169,6 +169,7 @@ def sea_surface_handler_with_template(doc: Document, request: Any) -> None:
 
 def sea_surface(request: HttpRequest) -> HttpResponse:
     script = server_document(request.build_absolute_uri())
+    print (script)
     return render(request, "embed.html", dict(script=script))
 
 def sea_surface_custom_uri(request: HttpRequest) -> HttpResponse:

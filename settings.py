@@ -27,6 +27,7 @@ def get_env_variable(var_name):
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_PATH = Path(BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -79,7 +80,7 @@ ROOT_URLCONF = 'traimaocv.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(MODULE_DIR, "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -92,7 +93,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'traimaocv.wsgi.application'
+#WSGI_APPLICATION = 'traimaocv.wsgi.application'
+ASGI_APPLICATION = 'traimaocv.routing.application'
 
 
 # Database
@@ -149,3 +151,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [bokehjsdir()]
 THEMES_DIR = os.path.join(MODULE_DIR, "themes")
+print(THEMES_DIR)
+print(STATICFILES_DIRS)
