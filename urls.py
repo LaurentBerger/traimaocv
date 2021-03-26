@@ -15,10 +15,17 @@ Including another URLconf
     
  
 """
+from django.apps import apps
 from django.contrib import admin
 from django.urls import path,include
 from django.views.generic.base import RedirectView
+
+import bokeh
+from bokeh.server.django import autoload, directory, document, static_extensions
+
 from . import views
+
+bokeh_app_config = apps.get_app_config('bokeh.server.django')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -42,5 +49,7 @@ urlpatterns = [
     path('index/convol_exo2', views.convol_exo2,name="convol_exo2"),
     path('index/intercorr_exo1', views.intercorr_exo1,name="intercorr_exo1"),
     path('index/', views.index,name="index"),
+    path("index/sea_surface", views.sea_surface),
+    path("index/my_sea_surface", views.sea_surface_custom_uri),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.ico')),
 ]

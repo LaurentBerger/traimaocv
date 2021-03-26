@@ -9,8 +9,12 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
+
 from pathlib import Path
 import os
+from django.conf import settings
+from bokeh.settings import bokehjsdir
+
 from django.core.exceptions import ImproperlyConfigured
 
 def get_env_variable(var_name):
@@ -22,7 +26,7 @@ def get_env_variable(var_name):
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -56,6 +60,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'bokeh.server.django',
     'traimaocv',
 ]
 
@@ -142,3 +147,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [bokehjsdir()]
+THEMES_DIR = os.path.join(MODULE_DIR, "themes")
