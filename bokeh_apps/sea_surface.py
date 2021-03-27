@@ -4,6 +4,7 @@ from bokeh.models import ColumnDataSource, Slider
 from bokeh.plotting import figure
 from bokeh.sampledata.sea_surface_temperature import sea_surface_temperature
 
+print("F:\django\traimaocv\bokeh_apps\sea_surface.py")
 df = sea_surface_temperature.copy()
 source = ColumnDataSource(data=df)
 

@@ -29,6 +29,7 @@ else:
     # add the virtualenv site-packages path to the sys.path
     sys.path.append('/home/traimaocv/env_django/lib/python3.8/site-packages')
 
+print("SYSPATH=", sys.path)
 
 django.setup()
 

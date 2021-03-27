@@ -160,7 +160,7 @@ def sea_surface_handler_with_template(doc: Document, request: Any) -> None:
 {% endblock %}
 {% block contents %}
     <div>
-    This Bokeh app below is served by a <span class="bold">Django</span> server for {{ username }}:
+    This Bokeh app below is served by me and a <span class="bold">Django</span> server for {{ username }}:
     </div>
     {{ super() }}
 {% endblock %}
@@ -168,6 +168,7 @@ def sea_surface_handler_with_template(doc: Document, request: Any) -> None:
     doc.template_variables["username"] = request.user
 
 def sea_surface(request: HttpRequest) -> HttpResponse:
+    print("VIEWS sea_surface")
     script = server_document(request.build_absolute_uri())
     print (script)
     return render(request, "embed.html", dict(script=script))
