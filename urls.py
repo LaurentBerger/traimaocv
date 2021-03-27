@@ -30,7 +30,7 @@ from bokeh.server.django import autoload, directory, document, static_extensions
 from . import views
 
 bokeh_app_config = apps.get_app_config('bokeh.server.django')
-print(bokeh_app_config)
+print("bokeh_app_config=", bokeh_app_config)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -60,6 +60,8 @@ urlpatterns = [
 ]
 base_path = settings.BASE_PATH
 
+print("base_path=", base_path)
+
 bokeh_apps = [
     autoload("index/sea_surface", views.sea_surface_handler),
     document("index/sea_surface_with_template", views.sea_surface_handler_with_template),
@@ -67,8 +69,9 @@ bokeh_apps = [
     document("shape_viewer", views.shape_viewer_handler),
 ]
 
-apps_path = Path(bokeh.__file__).parent.parent / "app"
+apps_path = base_path / "traimaocv" /  "bokeh_apps" 
 bokeh_apps += directory(apps_path)
+print("bokeh_apps=", bokeh_apps)
 
 urlpatterns += static_extensions()
 urlpatterns += staticfiles_urlpatterns()

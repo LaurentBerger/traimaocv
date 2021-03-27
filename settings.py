@@ -25,8 +25,8 @@ def get_env_variable(var_name):
         raise ImproperlyConfigured(error_msg)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(MODULE_DIR)
 BASE_PATH = Path(BASE_DIR)
 
 # Quick-start development settings - unsuitable for production
@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'bokeh.server.django',
     'traimaocv',
 ]
@@ -150,6 +151,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [bokehjsdir()]
+#STATICFILES_DIRS = ['"F:\\Program Files\\Python\\lib\\site-packages\\bokeh\\server\\static"']
 THEMES_DIR = os.path.join(MODULE_DIR, "themes")
-print(THEMES_DIR)
-print(STATICFILES_DIRS)
+print("THEMES_DIR=", THEMES_DIR)
+print("STATICFILES_DIRS=", STATICFILES_DIRS)
