@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os
 from django.conf import settings
-from bokeh.settings import bokehjsdir
+#from bokeh.settings import bokehjsdir
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -61,8 +61,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    #'channels',
-    'bokeh.server.django',
+    #   'channels',
+    #   'bokeh.server.django',
     'traimaocv',
 ]
 
@@ -94,7 +94,7 @@ TEMPLATES = [
     },
 ]
 
-#WSGI_APPLICATION = 'traimaocv.wsgi.application'
+WSGI_APPLICATION = 'traimaocv.wsgi.application'
 ASGI_APPLICATION = 'traimaocv.routing.application'
 
 
@@ -150,7 +150,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [bokehjsdir()]
+STATICFILES_DIRS = []
+#STATICFILES_DIRS = [bokehjsdir()]
 #STATICFILES_DIRS = ['"F:\\Program Files\\Python\\lib\\site-packages\\bokeh\\server\\static"']
 THEMES_DIR = os.path.join(MODULE_DIR, "themes")
 print("THEMES_DIR=", THEMES_DIR)
