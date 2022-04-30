@@ -14,7 +14,7 @@ import os, sys
 sys.path.append('/home/traimaocv/django')
 
 # add the virtualenv site-packages path to the sys.path
-sys.path.append('/home/traimaocv/env_django/lib/python3.8/site-packages')
+sys.path.append('/home/traimaocv/env_django/lib/python3.10/site-packages')
 
 
 from django.core.wsgi import get_wsgi_application

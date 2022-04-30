@@ -36,7 +36,7 @@ BASE_PATH = Path(BASE_DIR)
 SECRET_KEY = get_env_variable("dj_secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if "USERDOMAIN" in os.environ:
     if os.environ[ "USERDOMAIN"]=='PC-LAURENT-VISI':
         DEBUG = True
@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    #'channels',
+    #   'channels',
     'bokeh.server.django',
     'traimaocv',
 ]
@@ -95,7 +95,7 @@ TEMPLATES = [
     },
 ]
 
-#WSGI_APPLICATION = 'traimaocv.wsgi.application'
+WSGI_APPLICATION = 'traimaocv.wsgi.application'
 ASGI_APPLICATION = 'traimaocv.routing.application'
 
 
@@ -151,7 +151,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [bokehjsdir()]
+STATICFILES_DIRS = []
+#STATICFILES_DIRS = [bokehjsdir()]
 #STATICFILES_DIRS = ['"F:\\Program Files\\Python\\lib\\site-packages\\bokeh\\server\\static"']
 THEMES_DIR = os.path.join(MODULE_DIR, "themes")
 print("THEMES_DIR=", THEMES_DIR)

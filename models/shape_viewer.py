@@ -1,4 +1,5 @@
 import numpy as np
+"""
 import panel as pn
 import param
 
@@ -67,3 +68,4 @@ def shape_viewer():
     viewer = ShapeViewer()
     panel = pn.Row(viewer.param, viewer.panel())
     return panel
+"""
