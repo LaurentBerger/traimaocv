@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os
 from django.conf import settings
-#from bokeh.settings import bokehjsdir
+from bokeh.settings import bokehjsdir
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -36,7 +36,7 @@ BASE_PATH = Path(BASE_DIR)
 SECRET_KEY = get_env_variable("dj_secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if "USERDOMAIN" in os.environ:
     if os.environ[ "USERDOMAIN"]=='PC-LAURENT-VISI':
         DEBUG = True
@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     #   'channels',
-    #   'bokeh.server.django',
+    'bokeh.server.django',
     'traimaocv',
 ]
 
