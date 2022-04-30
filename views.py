@@ -168,21 +168,18 @@ def get_arg_post(request, list_var):
         return False, []
     return True, resultat
 
-nb_call = 0  
 @csrf_protect
 def sinus_slider(request: HttpRequest) -> HttpResponse:
     freq = 1
-    global nb_call
     b_ok, val = get_arg_post(request, ['freq'])
     if b_ok:
         freq = float(val[0])
 
     x = np.linspace(0, 10, 500)
     y = np.sin(freq*x)+freq
-    print("Frequence slider= ",freq)
     source = ColumnDataSource(data=dict(x=x, y=y))
 
-    plot = figure(y_range=(-10, 10), width=400, height=400,title="Ma Courbe"+str(nb_call),name="Mes_donnees")
+    plot = figure(y_range=(-10, 10), width=400, height=400,title="Ma Courbe",name="Mes_donnees")
 
     plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6,name="Mon_sinus")
 
@@ -218,20 +215,11 @@ def sinus_slider(request: HttpRequest) -> HttpResponse:
         """)
 
     amp_slider.js_on_change('value', callback)
-    if nb_call%2==0:
-        layout = row(plot, column(amp_slider))
-    else:
-        layout = row(column(amp_slider),plot)
+    layout = row(plot, column(amp_slider))
     script1, div1  = components(layout, "Graphique")
     pos = div1.find('data-root-id="')
     id = int(div1[pos+14:pos+18])
-    print(div1, id)
-    layout.update()
-    #script2, div2  = components(amp_slider, "slider freq")
-    #html2 = file_html(layout, CDN, "my plot")
-    #html2 = html2.replace("</head>","{% csrf_token %}</head>")
     code_html = render(request,"sinus_slider.html", dict(script1=script1, div=div1))
-    nb_call = nb_call + 1
     return code_html
 
 @csrf_protect
@@ -243,7 +231,6 @@ def sinus_slider_change(request: HttpRequest) -> HttpResponse:
 
     x = np.linspace(0, 10, 500)
     y = np.sin(freq*x)+freq
-    print("Frequence sinus_slider_change= ",freq)
     source = base64.b64encode(x)
     
     return JsonResponse(dict(x=x.tolist(),y=y.tolist()))
