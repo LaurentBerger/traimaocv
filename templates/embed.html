@@ -4,12 +4,16 @@
 <head>
   <meta charset="utf-8">
   <title>C'est ma page Django via autoload.js</title>
+  {% csrf_token %}
 </head>
 
 <body>
   <div>
-    This Bokeh app below is served by a Django server (via autoload.js):
   </div>
-  {{ script|safe }}
+  {{ script2|safe }}
+  <div>
+    Sinus
+  </div>
+  {{ script1|safe }}
 </body>
 </html>

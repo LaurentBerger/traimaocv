@@ -53,6 +53,7 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None' 
 CSRF_COOKIE_SECURE = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+CSRF_TRUSTED_ORIGINS = 'https://cdn.bokeh.org'
 
 INSTALLED_APPS = [
     'django.contrib.admin',

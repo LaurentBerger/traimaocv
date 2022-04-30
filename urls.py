@@ -29,7 +29,7 @@ from bokeh.server.django import autoload, directory, document, static_extensions
 
 from . import views
 
-bokeh_app_config = apps.get_app_config('bokeh.server.django')
+bokeh_app_config = apps.get_app_config('bokeh_server_django')
 print("bokeh_app_config=", bokeh_app_config)
 
 urlpatterns = [
@@ -54,8 +54,9 @@ urlpatterns = [
     path('index/convol_exo2', views.convol_exo2,name="convol_exo2"),
     path('index/intercorr_exo1', views.intercorr_exo1,name="intercorr_exo1"),
     path('index/', views.index,name="index"),
-    path("index/sea_surface", views.sea_surface),
-    path("index/my_sea_surface", views.sea_surface_custom_uri),
+    path("index/sinus", views.sinus_bokeh),
+    path("index/slider", views.sinus_slider),
+    path("index/slider_change", views.sinus_slider_change),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.ico')),
 ]
 base_path = settings.BASE_PATH
@@ -63,10 +64,9 @@ base_path = settings.BASE_PATH
 print("base_path=", base_path)
 
 bokeh_apps = [
-    autoload("index/sea_surface", views.sea_surface_handler),
-    document("index/sea_surface_with_template", views.sea_surface_handler_with_template),
-    document("/bokeh_apps/sea_surface", base_path / "traimaocv" / "bokeh_apps" / "sea_surface.py"),
-    document("shape_viewer", views.shape_viewer_handler),
+    #autoload("index/sea_surface", views.sea_surface_handler),
+    #document("/bokeh_apps/sea_surface", base_path / "traimaocv" / "bokeh_apps" / "sea_surface.py"),
+    #document("shape_viewer", views.shape_viewer_handler),
 ]
 
 apps_path = base_path / "traimaocv" /  "bokeh_apps" 
