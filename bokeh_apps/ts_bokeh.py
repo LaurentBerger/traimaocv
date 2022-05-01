@@ -51,7 +51,7 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
                       start_angle=0.0, end_angle="theta",
                       line_color="blue",
                       line_width=3,
-                      direction ='clock'
+                      direction ='anticlock'
                       )
     secteur_line = Line(x="x", y="y",
                         line_color="blue",
