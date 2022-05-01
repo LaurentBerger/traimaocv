@@ -32,7 +32,8 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
                   width=400,
                   height=400,
                   title="Cercle trigonométrique",
-                  name="Mes_donnees")
+                  name="Mes_donnees",
+                  match_aspect=True)
     plot.circle(0, 0, radius=1,
                 fill_color=None,
                 line_color='OliveDrab',
