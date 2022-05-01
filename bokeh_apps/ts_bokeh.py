@@ -45,13 +45,13 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     r = [0.5]
     legende = '\\theta = '+str(theta)
     source_1 = ColumnDataSource(dict(x=x, y=y, r=r, theta=[theta]))
-    source_2 = ColumnDataSource(dict(x=[0,np.cos(theta)], y=[0, np.sin(theta)]))
+    source_2 = ColumnDataSource(dict(x=[0,r[0]*np.cos(theta)], y=[0, r[0]*np.sin(theta)]))
     source_3 = ColumnDataSource(dict(x=[r[0]*np.cos(theta/2)], y=[r[0]*np.sin(theta/2)], texte=['theta = '+str(theta)]))
     secteur_arc = Arc(x="x", y="y", radius="r",
                       start_angle=0.0, end_angle="theta",
                       line_color="blue",
                       line_width=3,
-                      direction ='anticlock'
+                      direction ='clock'
                       )
     secteur_line = Line(x="x", y="y",
                         line_color="blue",
@@ -63,7 +63,7 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
                         )
                 
     plot.add_glyph(source_1, secteur_arc)
-    plot.add_glyph(source_1, secteur_line)
+    plot.add_glyph(source_2, secteur_line)
     plot.add_glyph(source_3, secteur_text)
 
     theta_slider = Slider(start=0., end=np.pi*2, value=theta, step=.1, title="Theta")
@@ -126,7 +126,7 @@ def theta_slider_change(request: HttpRequest) -> HttpResponse:
     #source_1 = ColumnDataSource(dict(x=x, y=y, r=r, theta=[theta]))
     #source_2 = ColumnDataSource(dict(x=[0,np.cos(theta)], y=[0, np.sin(theta)]))
     return JsonResponse(dict(s1_x=x,s1_y=y,s1_r=r,s1_theta=[theta],
-                             s2_x=[0,np.cos(theta)], s2_y=[0,np.sin(theta)],
+                             s2_x=[0,r[0]*np.cos(theta)], s2_y=[0,r[0]*np.sin(theta)],
                              s3_x=[r[0]*np.cos(theta/2)],s3_y=[r[0]*np.sin(theta/2)],
                              s3_texte=['\\theta = '+str(int(theta*100)/100)]))
     
