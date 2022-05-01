@@ -11,167 +11,112 @@ import urllib, base64
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.csrf import csrf_protect
-from django.http import JsonResponse
-from .models import cours_ts as cts
 
-from bokeh.document import Document
-from bokeh.embed import server_document
-from bokeh.layouts import column, row
-from bokeh.models import ColumnDataSource, Slider
-from bokeh.plotting import figure
-from bokeh.sampledata.sea_surface_temperature import sea_surface_temperature
-from bokeh.themes import Theme
-from bokeh.resources import CDN
-from bokeh.embed import file_html, components
-from bokeh.models import CustomJS, RangeSlider
 
-from .models import shape_viewer
+import traimaocv.bokeh_apps.ts_bokeh as ts_bkh
+import traimaocv.models.cours_ts as ts_crs
 
 def index(request):
     return render(request,'index.html')
 
 @xframe_options_exempt
 def frequence(request):
-    a = cts.Frequence(request)()
+    a = ts_crs.Frequence(request)()
     return render(request, a[0], a[1])
 
 @xframe_options_exempt
 def cercle_trigo(request):
-    a = cts.CercleTrigo(request)()
+    a = ts_crs.CercleTrigo(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt    
 def exo_trans_simil(request):
-    a = cts.TransSimil(request)()
+    a = ts_crs.TransSimil(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def freq_spatiale_2d(request):
-    a = cts.FreqSpatiale2d(request)()
+    a = ts_crs.FreqSpatiale2d(request)()
     return render(request,a[0], a[1])
     
 @xframe_options_exempt
 def melange_sinus(request):
-    a = cts.MelangeSinus(request)()
+    a = ts_crs.MelangeSinus(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def simul_sf(request):
-    a = cts.SimulSF(request)()
+    a = ts_crs.SimulSF(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def tf_chirp_lin(request):
-    a = cts.TFChirpLin(request)()
+    a = ts_crs.TFChirpLin(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def tf_signal_amorti(request):
-    a = cts.TFSignalAmorti(request)()
+    a = ts_crs.TFSignalAmorti(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def fonda_harmo(request):
-    a = cts.FondaHarmo(request)()
+    a = ts_crs.FondaHarmo(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def fonda_harmo_amorti(request):
-    a = cts.FondaHarmoAmorti(request)()
+    a = ts_crs.FondaHarmoAmorti(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def echantillonnage_ex1(request):
-    a = cts.EchantillonnageEx1(request)()
+    a = ts_crs.EchantillonnageEx1(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def echantillonnage_ex2(request):
-    a = cts.EchantillonnageEx2(request)()
+    a = ts_crs.EchantillonnageEx2(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def echantillonnage_ex3(request):
-    a = cts.EchantillonnageEx3(request)()
-    print (a[0])
+    a = ts_crs.EchantillonnageEx3(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def can_exo(request):
-    a = cts.CANExo(request)()
+    a = ts_crs.CANExo(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def cna_exo(request):
-    a = cts.CNAExo(request)()
+    a = ts_crs.CNAExo(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def convol_exo1(request):
-    a = cts.ConvolExo1(request)()
+    a = ts_crs.ConvolExo1(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def convol_exo2(request):
-    a = cts.ConvolExo2(request)()
+    a = ts_crs.ConvolExo2(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt
 def intercorr_exo1(request):
-    a = cts.IntercorrExo1(request)()
+    a = ts_crs.IntercorrExo1(request)()
     return render(request,a[0], a[1])
 
     
-theme = Theme(filename=join(settings.THEMES_DIR, "theme.yaml"))
 
 
-def with_request(f):
-    def wrapper(doc):
-        return f(doc, doc.session_context.request)
-    return wrapper
-
-
-
-def sinus_bokeh(request: HttpRequest) -> HttpResponse:
-    plot = figure()
-    slider = Slider(start=0, end=10, step=.1, value=1, title="Stuff")
-    slider.js_on_change("value", CustomJS(code="""
-    console.log('slider: value=' + this.value, this.toString())
-    """))
-    x = np.arange(0,3*np.pi,0.5)
-    plot.circle(x, np.sin(x))
-
-    html1 = file_html(plot, CDN, "my plot")
-    html2 = file_html(slider, CDN, "my plot")
-    return render(request, "embed.html", dict(script1=html1,script2=html2))
-
-
-def get_arg_post(request, list_var):
-    """
-    Récupération des données POST dans une requète
-    request --> objet HTTPrequest
-    list-var --> liste des variables à extraire de la requête
-    valeur retour --> booléen et liste des valeurs
-    booléen False si les valeurs n'ont pas été trouvées
-    """
-    resultat = []
-    if len(request.POST) > 0:
-        for v in list_var:  
-            if v in request.POST:
-                try:   
-                    resultat.append(request.POST[v])
-                except:
-                    return False, []
-            else:
-                return False, []
-    else:
-        return False, []
-    return True, resultat
 
 @csrf_protect
 def sinus_slider(request: HttpRequest) -> HttpResponse:
     freq = 1
-    b_ok, val = get_arg_post(request, ['freq'])
+    b_ok, val = cts.get_arg_post(request, ['freq'])
     if b_ok:
         freq = float(val[0])
 

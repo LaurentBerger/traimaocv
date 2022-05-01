@@ -27,6 +27,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 import bokeh
 from bokeh.server.django import autoload, directory, document, static_extensions
 
+import traimaocv.bokeh_apps.ts_bokeh as ts_bkh
 from . import views
 
 bokeh_app_config = apps.get_app_config('bokeh_server_django')
@@ -54,9 +55,11 @@ urlpatterns = [
     path('index/convol_exo2', views.convol_exo2,name="convol_exo2"),
     path('index/intercorr_exo1', views.intercorr_exo1,name="intercorr_exo1"),
     path('index/', views.index,name="index"),
-    path("index/sinus", views.sinus_bokeh),
-    path("index/slider", views.sinus_slider),
-    path("index/slider_change", views.sinus_slider_change),
+    path("index/freq_phase", ts_bkh.freq_phase),
+    path("index/cercle_trigo_bkh", ts_bkh.cercle_trigo_bkh),
+    path("index/slider", ts_bkh.sinus_slider),
+    path("index/slider_change", ts_bkh.sinus_slider_change),
+    path("index/theta_slider_change", ts_bkh.theta_slider_change),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.ico')),
 ]
 base_path = settings.BASE_PATH
