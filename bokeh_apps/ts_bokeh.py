@@ -27,9 +27,7 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     b_ok, val = ts_crs.get_arg_post(request, ['theta'])
     if b_ok:
         theta = float(val[0])
-    plot = figure(y_range=(-1.5, 1.5), 
-                  x_range=(-1.5, 1.5),
-                  width=400,
+    plot = figure(width=400,
                   height=400,
                   title="Cercle trigonométrique",
                   name="Mes_donnees",
@@ -67,7 +65,7 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     plot.add_glyph(source_2, secteur_line)
     plot.add_glyph(source_3, secteur_text)
 
-    theta_slider = Slider(start=0., end=np.pi*2, value=theta, step=.1, title="Theta")
+    theta_slider = Slider(start=0., end=np.pi*2, value=theta, step=.01, title="Theta")
     callback = CustomJS(args=dict(source1=source_1, source2=source_2, source3=source_3, theta=theta_slider),
                         code="""
         var csrfToken = '';
