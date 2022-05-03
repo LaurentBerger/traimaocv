@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from django.views.decorators.csrf import csrf_protect
+#from django.views.decorators.csrf import csrf_protect
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -36,7 +36,6 @@ $$ equation $$
 EXT_DVI=".svg"
 
 
-@xframe_options_exempt
 def latex_url(theta):
     
     os.chdir(DIR_DFT)
@@ -66,6 +65,7 @@ def latex_url(theta):
    
     return "/static/equation"+idx_file+EXT_DVI
 
+@xframe_options_exempt
 def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     theta = 1
     b_ok, val = ts_crs.get_arg_post(request, ['theta'])
@@ -170,7 +170,7 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     code_html = render(request,"cercle_trigo_bkh.html", dict(script1=script1, div=div1))
     return code_html
 
-@csrf_protect
+@xframe_options_exempt
 def theta_slider_change(request: HttpRequest) -> HttpResponse:
     theta = 1
     b_ok, val = ts_crs.get_arg_post(request, ['theta'])
@@ -189,6 +189,7 @@ def theta_slider_change(request: HttpRequest) -> HttpResponse:
                              s4_x=[r[0]*np.cos(theta-0.09)],s4_y=[r[0]*np.sin(theta-0.09)],
                              s3_url=[url]))
     
+@xframe_options_exempt
 def freq_phase(request: HttpRequest) -> HttpResponse:
     freq = 1
     b_ok, val = ts_crs.get_arg_post(request, ['freq'])
@@ -248,7 +249,7 @@ def freq_phase(request: HttpRequest) -> HttpResponse:
     return code_html
 
     
-@csrf_protect
+@xframe_options_exempt
 def sinus_slider(request: HttpRequest) -> HttpResponse:
     freq = 1
     b_ok, val = ts_crs.get_arg_post(request, ['freq'])
@@ -300,7 +301,7 @@ def sinus_slider(request: HttpRequest) -> HttpResponse:
     code_html = render(request,"sinus_slider.html", dict(script1=script1, div=div1))
     return code_html
 
-@csrf_protect
+@xframe_options_exempt
 def sinus_slider_change(request: HttpRequest) -> HttpResponse:
     freq = 1
     phase = 0
