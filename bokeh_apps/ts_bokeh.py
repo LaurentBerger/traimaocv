@@ -5,6 +5,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.http import JsonResponse
 import django.contrib.staticfiles 
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from bokeh.io import curdoc
 from bokeh.layouts import column
@@ -35,6 +36,7 @@ $$ equation $$
 EXT_DVI=".svg"
 
 
+@xframe_options_exempt
 def latex_url(theta):
     
     os.chdir(DIR_DFT)
