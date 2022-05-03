@@ -91,7 +91,7 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     source_2 = ColumnDataSource(dict(x=[0,np.cos(theta)], y=[0, np.sin(theta)]))
     url = latex_url(theta)
     source_3 = ColumnDataSource(dict(url=[url],x=[1.5*r[0]*np.cos(theta/2)], y=[1.5*r[0]*np.sin(theta/2)]))
-    source_4 = ColumnDataSource(dict(url=[url],x=[r[0]*np.cos(theta-0.09)], y=[r[0]*np.sin(theta-0.09)]))
+    source_4 = ColumnDataSource(dict(x=[r[0]*np.cos(theta-0.09)], y=[r[0]*np.sin(theta-0.09)], theta=[theta]))
     secteur_arc = Arc(x="x", y="y", radius="r",
                       start_angle=0.0, end_angle="theta",
                       line_color="blue",
