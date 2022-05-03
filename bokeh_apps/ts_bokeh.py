@@ -31,38 +31,30 @@ LATEX =r"""\documentclass[border=12pt,12pt,varwidth]{standalone}
 $$ equation $$
 \end{document}
 """
-mathml = """
-<math>
-  <mrow>
-    <mfrac>
-      <mn>1</mn>
-      <mn>4</mn>
-    </mfrac>
-    <msup>
-      <mi>x</mi>
-      <mn>2</mn>
-    </msup>
-  </mrow>
-</math>
-"""
+EXT_DVI=".svg"
+
 
 def latex_url(theta):
     
     os.chdir(DIR_DFT)
     idx_file = str(int(theta*100))
     nom_fichier = "equation"+idx_file
-    if os.path.isfile(nom_fichier+".png"):
-        return "/static/equation"+idx_file+".png"
+    if os.path.isfile(nom_fichier+EXT_DVI):
+        return "/static/equation"+idx_file+EXT_DVI
     legende = LATEX.replace("equation",r"\boldsymbol{\theta = "+str(int(theta*100)/100)+"}")
     fichier_ltx = open(os.path.join(DIR_DFT,nom_fichier+".tex"),"w",encoding="utf-8")
     fichier_ltx.write(legende)
     fichier_ltx.close()
     cmd = "latex --shell-escape --quiet -output-directory="+DIR_DFT +" "+nom_fichier+".tex"
-    print(cmd)
     os.system(cmd)
-    cmd = "dvipng -bg Transparent -D 1200 "+ \
-          os.path.join(DIR_DFT,nom_fichier + ".dvi") + \
-          " -o "+ nom_fichier +".png"
+    if EXT_DVI == ".png":
+        cmd = "dvipng -bg Transparent -D 1200 "+ \
+              os.path.join(DIR_DFT,nom_fichier + ".dvi") + \
+              " -o "+ nom_fichier +EXT_DVI
+    else:
+        cmd = "dvisvgm  "+ \
+              os.path.join(DIR_DFT,nom_fichier + ".dvi") + \
+              " -o "+ nom_fichier +EXT_DVI
     print(cmd)
     os.system(cmd)
     os.remove(os.path.join(DIR_DFT, nom_fichier+".tex"))
@@ -70,7 +62,7 @@ def latex_url(theta):
     os.remove(os.path.join(DIR_DFT, nom_fichier+".dvi"))
     os.remove(os.path.join(DIR_DFT, nom_fichier+".log"))
    
-    return "/static/equation"+idx_file+".png"
+    return "/static/equation"+idx_file+EXT_DVI
 
 def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     theta = 1
@@ -84,7 +76,6 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
                   name="Mes_donnees",
                   match_aspect=True,
                   tools="wheel_zoom, reset, save")
-    plot.yaxis.axis_label = MathML(text=mathml)
      
     plot.circle(0, 0, radius=1,
                 fill_color=None,
