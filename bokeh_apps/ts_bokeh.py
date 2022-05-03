@@ -14,6 +14,7 @@ from bokeh.document import Document
 from bokeh.embed import server_document
 from bokeh.layouts import column, row
 from bokeh.models import Text, Arc, Line, ColumnDataSource, Slider
+from bokeh.models import Arrow, OpenHead, NormalHead, VeeHead
 from bokeh.plotting import figure
 from bokeh.embed import file_html, components
 from bokeh.models import CustomJS, RangeSlider, ImageURL
@@ -55,7 +56,6 @@ def latex_url(theta):
         cmd = "dvisvgm  "+ \
               os.path.join(DIR_DFT,nom_fichier + ".dvi") + \
               " -o "+ nom_fichier +EXT_DVI
-    print(cmd)
     os.system(cmd)
     os.remove(os.path.join(DIR_DFT, nom_fichier+".tex"))
     os.remove(os.path.join(DIR_DFT, nom_fichier+".aux"))
@@ -87,17 +87,18 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     x = [0]
     y = [0]
     r = [0.5]
-    
     source_1 = ColumnDataSource(dict(x=x, y=y, r=r, theta=[theta]))
     source_2 = ColumnDataSource(dict(x=[0,np.cos(theta)], y=[0, np.sin(theta)]))
     url = latex_url(theta)
     source_3 = ColumnDataSource(dict(url=[url],x=[1.5*r[0]*np.cos(theta/2)], y=[1.5*r[0]*np.sin(theta/2)]))
+    source_4 = ColumnDataSource(dict(url=[url],x=[r[0]*np.cos(theta-0.09)], y=[r[0]*np.sin(theta-0.09)]))
     secteur_arc = Arc(x="x", y="y", radius="r",
                       start_angle=0.0, end_angle="theta",
                       line_color="blue",
                       line_width=3,
                       direction ='anticlock'
                       )
+    plot.scatter(source=source_4,x='x',y='y',marker='triangle',size=15,angle='theta')
     secteur_line = Line(x="x", y="y",
                         line_color="blue",
                         line_width=3
@@ -114,7 +115,11 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     plot.add_glyph(source_3, image1)
 
     theta_slider = Slider(start=0., end=np.pi*2, value=theta, step=.1, title="Theta")
-    callback = CustomJS(args=dict(source1=source_1, source2=source_2, source3=source_3, theta=theta_slider),
+    callback = CustomJS(args=dict(source1=source_1,
+                                  source2=source_2,
+                                  source3=source_3,
+                                  source4=source_4,
+                                  theta=theta_slider),
                         code="""
         var csrfToken = '';
         var i=0;
@@ -146,9 +151,13 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
             source3.data.x = reponse['s3_x'];
             source3.data.y = reponse['s3_y'];
             source3.data.url = reponse['s3_url'];
+            source4.data.x = reponse['s4_x']
+            source4.data.y = reponse['s4_y']
+            source4.data.theta = reponse['s1_theta']
             source1.change.emit();
             source2.change.emit();
             source3.change.emit();
+            source4.change.emit();
             }
         xhr.send(dataForm);
         """)
@@ -175,6 +184,7 @@ def theta_slider_change(request: HttpRequest) -> HttpResponse:
     return JsonResponse(dict(s1_x=x,s1_y=y,s1_r=r,s1_theta=[theta],
                              s2_x=[0,np.cos(theta)], s2_y=[0,np.sin(theta)],
                              s3_x=[1.5*r[0]*np.cos(theta/2)],s3_y=[1.5*r[0]*np.sin(theta/2)],
+                             s4_x=[r[0]*np.cos(theta-0.09)],s4_y=[r[0]*np.sin(theta-0.09)],
                              s3_url=[url]))
     
 def freq_phase(request: HttpRequest) -> HttpResponse:
@@ -191,12 +201,12 @@ def freq_phase(request: HttpRequest) -> HttpResponse:
     y = np.sin(np.pi*2*freq*x+phase)
     source = ColumnDataSource(data=dict(x=x, y=y))
 
-    plot = figure(y_range=(-1.5, 1.5), width=1000, height=1000,title="Ma Courbe",name="Mes_donnees")
+    plot = figure(y_range=(-1.5, 1.5), width=600, height=600,title="Ma Courbe",name="Mes_donnees")
 
     plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6,name="Mon_sinus")
     plot.add_tools(BoxSelectTool())
     freq_slider = Slider(start=0., end=10, value=freq, step=.1, title="Frequence")
-    phase_slider = Slider(start=-10., end=10, value=phase, step=.1, title="Phase")
+    phase_slider = Slider(start=0., end=2*np.pi, value=phase, step=.1, title="Phase")
     callback = CustomJS(args=dict(source=source, freq=freq_slider, phase=phase_slider),
                         code="""
         var csrfToken = '';
