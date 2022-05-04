@@ -9,7 +9,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 
 from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, Slider, Toolbar
+from bokeh.models import ColumnDataSource, Slider, Toolbar, Legend, LegendItem
 from bokeh.plotting import figure
 from bokeh.document import Document
 from bokeh.embed import server_document
@@ -20,9 +20,12 @@ from bokeh.plotting import figure
 from bokeh.embed import file_html, components
 from bokeh.models import CustomJS, RangeSlider, ImageURL
 from bokeh.models import BoxSelectTool, LassoSelectTool, BoxZoomTool
+from bokeh.models import Ascii
 
 import traimaocv.models.cours_ts as ts_crs
 from bokeh.models import MathML
+#import traimaocv.bokeh_apps.latex_bokeh as latex_bkh
+
 #theme = Theme(filename=join(settings.THEMES_DIR, "theme.yaml"))
 
 DIR_DFT = os.path.dirname(django.contrib.staticfiles.finders.find("favicon.ico"))
@@ -35,15 +38,26 @@ $$ equation $$
 """
 EXT_DVI=".svg"
 
+def latex_cercle_trigo(param):
+    idx_file = str(int(param[0]*100))
+    nom_fichier = "cercle_"+idx_file
+    legende = LATEX.replace("equation",r"\boldsymbol{\theta = "+str(int(param[0]*100)/100)+"}")
+    return legende, nom_fichier, idx_file
 
-def latex_url(theta):
-    
+def latex_sinus_freq_phase(param):
+    idx_file = str(int(param[0]*100)) + "_" + str(int(param[1]*100))
+    nom_fichier = "sinus_"+idx_file
+    legende = LATEX.replace("equation",r"\boldsymbol{sin(2\pi " + 
+                            str(int(param[0]*100)/100) + "x - " +
+                            str(int(param[1]*100)/100) + ")}" 
+                            )
+    return legende, nom_fichier, idx_file
+
+def latex_url(param, fct_latex):
     os.chdir(DIR_DFT)
-    idx_file = str(int(theta*100))
-    nom_fichier = "equation"+idx_file
+    legende, nom_fichier, idx_file = fct_latex(param)
     if os.path.isfile(nom_fichier+EXT_DVI):
-        return "/static/equation"+idx_file+EXT_DVI
-    legende = LATEX.replace("equation",r"\boldsymbol{\theta = "+str(int(theta*100)/100)+"}")
+        return "/static/"+nom_fichier+EXT_DVI
     fichier_ltx = open(os.path.join(DIR_DFT,nom_fichier+".tex"),"w",encoding="utf-8")
     fichier_ltx.write(legende)
     fichier_ltx.close()
@@ -63,7 +77,7 @@ def latex_url(theta):
     os.remove(os.path.join(DIR_DFT, nom_fichier+".dvi"))
     os.remove(os.path.join(DIR_DFT, nom_fichier+".log"))
    
-    return "/static/equation"+idx_file+EXT_DVI
+    return "/static/"+nom_fichier+EXT_DVI
 
 @xframe_options_exempt
 def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
@@ -89,9 +103,9 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
     x = [0]
     y = [0]
     r = [0.5]
+    url = latex_url([theta], latex_cercle_trigo)
     source_1 = ColumnDataSource(dict(x=x, y=y, r=r, theta=[theta]))
     source_2 = ColumnDataSource(dict(x=[0,np.cos(theta)], y=[0, np.sin(theta)]))
-    url = latex_url(theta)
     source_3 = ColumnDataSource(dict(url=[url],x=[1.5*r[0]*np.cos(theta/2)], y=[1.5*r[0]*np.sin(theta/2)]))
     source_4 = ColumnDataSource(dict(x=[r[0]*np.cos(theta-0.09)], y=[r[0]*np.sin(theta-0.09)], theta=[theta]))
     secteur_arc = Arc(x="x", y="y", radius="r",
@@ -180,7 +194,7 @@ def theta_slider_change(request: HttpRequest) -> HttpResponse:
     x = [0]
     y = [0]
     r = [0.5]
-    url = latex_url(theta)
+    url = latex_url([theta], latex_cercle_trigo)
     #source_1 = ColumnDataSource(dict(x=x, y=y, r=r, theta=[theta]))
     #source_2 = ColumnDataSource(dict(x=[0,np.cos(theta)], y=[0, np.sin(theta)]))
     return JsonResponse(dict(s1_x=x,s1_y=y,s1_r=r,s1_theta=[theta],
@@ -201,16 +215,25 @@ def freq_phase(request: HttpRequest) -> HttpResponse:
         phase = float(val[0])
 
     x = np.linspace(0, 10, 500)
-    y = np.sin(np.pi*2*freq*x+phase)
-    source = ColumnDataSource(data=dict(x=x, y=y))
+    y = np.sin(np.pi*2*freq*x-phase)
+    url = latex_url([freq, phase], latex_sinus_freq_phase)
+
+    source_1 = ColumnDataSource(data=dict(x=x, y=y))
+    #source_2 = ColumnDataSource(data=dict(url=url.tolist()))
 
     plot = figure(y_range=(-1.5, 1.5), width=600, height=600,title="Ma Courbe",name="Mes_donnees")
-
-    plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6,name="Mon_sinus")
+    plot.xaxis.axis_label=r"$$x\cdot\pi$$"
+    le_sinus = plot.line('x', 'y',
+                         source=source_1,
+                         line_width=3,
+                         line_alpha=0.6,
+                         name="Mon_sinus")
+    legend = Legend(items=[LegendItem(label=url, renderers=[le_sinus], index=0)])
+    plot.add_layout(legend)
     plot.add_tools(BoxSelectTool())
     freq_slider = Slider(start=0., end=10, value=freq, step=.1, title="Frequence")
     phase_slider = Slider(start=0., end=2*np.pi, value=phase, step=.1, title="Phase")
-    callback = CustomJS(args=dict(source=source, freq=freq_slider, phase=phase_slider),
+    callback = CustomJS(args=dict(source=source_1, freq=freq_slider, phase=phase_slider),
                         code="""
         var csrfToken = '';
         var i=0;
@@ -256,8 +279,8 @@ def sinus_slider(request: HttpRequest) -> HttpResponse:
     if b_ok:
         freq = float(val[0])
 
-    x = np.linspace(0, 10, 500)
-    y = np.sin(np.pi*2*freq*x+phase)
+    x = np.linspace(0, 10, 2000)
+    y = np.sin(np.pi*2*freq*x-phase)
     source = ColumnDataSource(data=dict(x=x, y=y))
 
     plot = figure(y_range=(-10, 10), width=400, height=400,title="Ma Courbe",name="Mes_donnees")
@@ -312,6 +335,6 @@ def sinus_slider_change(request: HttpRequest) -> HttpResponse:
     if b_ok:
         phase = float(val[0])
 
-    x = np.linspace(0, 10, 500)
-    y = np.sin(freq*x+phase)
+    x = np.linspace(0, 10, 2000)
+    y = np.sin(np.pi*2*freq*x-phase)
     return JsonResponse(dict(x=x.tolist(),y=y.tolist()))
