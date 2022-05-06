@@ -60,6 +60,7 @@ urlpatterns = [
     path("index/slider", ts_bkh.sinus_slider),
     path("index/slider_change", ts_bkh.sinus_slider_change),
     path("index/theta_slider_change", ts_bkh.theta_slider_change),
+    path('index/melange_sinus_bkh', ts_bkh.sin_melange_bkh,name="melange_sinus"),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.ico')),
 ]
 base_path = settings.BASE_PATH
