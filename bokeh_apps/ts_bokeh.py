@@ -79,13 +79,15 @@ def latex_url(param, fct_latex):
    
     return "/static/"+nom_fichier+EXT_DVI
 
-CODE = """
-const aud = document.getElementById("audio_tag")
-aud.src="data:audio/wav;base64,"+%r
-console.log(aud.src)
-aud.play();
-"""
-
+def melange_sinus(freq, amp, Fe=11025,):
+    t = np.arange(0, 2, 1 / Fe)
+    y = np.zeros(shape=(t.shape[0],2),dtype=np.float32)
+    y = amp[0] * np.sin(2 * np.pi * freq[0] * t)
+    y += amp[1] * np.sin(2 * np.pi * freq[1] * t)
+    y += amp[2] * np.sin(2 * np.pi * freq[2] * t)
+    y = np.clip(y, -1, 1)
+    return y, t
+    
 @xframe_options_exempt
 def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
     freq=[220, 0, 0]
@@ -99,14 +101,8 @@ def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
                   height=400,
                   title="Mélange de sinus",
                   name="Mes_donnees")
-     
-    Fe = 11025
-    t = np.arange(0, 2, 1 / Fe)
-    y = np.zeros(shape=(t.shape[0],2),dtype=np.float32)
-    y = amp[0] * np.sin(2 * np.pi * freq[0] * t)
-    y += amp[1] * np.sin(2 * np.pi * freq[1] * t)
-    y += amp[2] * np.sin(2 * np.pi * freq[2] * t)
-    y = np.clip(y, -1, 1)
+    Fe = 11025 
+    y, t = melange_sinus(freq, amp, Fe=Fe)
     plot.xaxis.axis_label=r"$$t$$"
     plot.yaxis.axis_label=r"$$y$$"
     source_1 = ColumnDataSource(dict(x=t, y=y))
@@ -198,13 +194,8 @@ def melange_slider_change(request: HttpRequest) -> HttpResponse:
     if b_ok:
         freq= [float(val[0]), float(val[1]), float(val[2])]
         amp= [float(val[3]), float(val[4]), float(val[5])]
-    Fe = 11025
-    t = np.arange(0, 2, 1 / Fe)
-    y = np.zeros(shape=(t.shape[0],2),dtype=np.float32)
-    y = amp[0] * np.sin(2 * np.pi * freq[0] * t)
-    y += amp[1] * np.sin(2 * np.pi * freq[1] * t)
-    y += amp[2] * np.sin(2 * np.pi * freq[2] * t)
-    y = np.clip(y, -1, 1)
+    Fe = 11025 
+    y, t = melange_sinus(freq, amp, Fe=Fe)
     urs =  ts_crs.convert_npson_uri(y, Fe)
     
     return JsonResponse(dict(s1_x=t.tolist(),s1_y=y.tolist(),
