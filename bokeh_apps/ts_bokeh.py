@@ -79,6 +79,13 @@ def latex_url(param, fct_latex):
    
     return "/static/"+nom_fichier+EXT_DVI
 
+CODE = """
+const aud = document.getElementById("audio_tag")
+aud.src="data:audio/wav;base64,"+%r
+console.log(aud.src)
+aud.play();
+"""
+
 @xframe_options_exempt
 def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
     freq=[220, 0, 0]
@@ -157,6 +164,9 @@ def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
             source1.data.y = reponse['s1_y'];
             source2.data.freq = reponse['freq'];
             source2.data.amp = reponse['amp'];
+            var audio_b64 = reponse['base64'];
+            const aud = document.getElementById("audio_tag1")
+            aud.src="data:audio/wav;base64,"+audio_b64
             source1.change.emit();
             source2.change.emit();
             }
@@ -194,9 +204,10 @@ def melange_slider_change(request: HttpRequest) -> HttpResponse:
     y += amp[1] * np.sin(2 * np.pi * freq[1] * t)
     y += amp[2] * np.sin(2 * np.pi * freq[2] * t)
     urs =  ts_crs.convert_npson_uri(y, Fe)
-
+    
     return JsonResponse(dict(s1_x=t.tolist(),s1_y=y.tolist(),
-                             s2_x=freq, s2_y=amp))
+                             s2_x=freq, s2_y=amp, 
+                             base64=urs))
  
 
 @xframe_options_exempt
