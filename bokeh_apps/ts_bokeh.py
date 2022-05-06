@@ -81,61 +81,51 @@ def latex_url(param, fct_latex):
 
 @xframe_options_exempt
 def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
-    theta = 1
-    b_ok, val = ts_crs.get_arg_post(request, ['theta'])
+    freq=[220, 0, 0]
+    amp = [1, 0, 0]
+    b_ok, val = ts_crs.get_arg_post(request,
+                                    ['f1','f2', 'f3', 'a1', 'a2', 'a3'])
     if b_ok:
-        theta = float(val[0])
-    outils = Toolbar(tools=[BoxSelectTool(), LassoSelectTool(),BoxZoomTool()])
+        freq= [float(val[0]), float(val[1]), float(val[2])]
+        amp= [float(val[3]), float(val[4]), float(val[5])]
     plot = figure(width=600,
                   height=600,
-                  title="Cercle trigonométrique",
-                  name="Mes_donnees",
-                  match_aspect=True,
-                  tools="wheel_zoom, reset, save")
+                  title="Mélange de sinus",
+                  name="Mes_donnees")
      
-    plot.circle(0, 0, radius=1,
-                fill_color=None,
-                line_color='OliveDrab',
-                line_width=3,
-                )
-    plot.line([-1.5, 1.5], [0, 0],line_color='red',line_width=3)
-    plot.line( [0, 0],[-1.5, 1.5],line_color='red',line_width=3)
-    x = [0]
-    y = [0]
-    r = [0.5]
-    url = latex_url([theta], latex_cercle_trigo)
-    source_1 = ColumnDataSource(dict(x=x, y=y, r=r, theta=[theta]))
-    source_2 = ColumnDataSource(dict(x=[0,np.cos(theta)], y=[0, np.sin(theta)]))
-    source_3 = ColumnDataSource(dict(url=[url],x=[1.5*r[0]*np.cos(theta/2)], y=[1.5*r[0]*np.sin(theta/2)]))
-    source_4 = ColumnDataSource(dict(x=[r[0]*np.cos(theta-0.09)], y=[r[0]*np.sin(theta-0.09)], theta=[theta]))
-    secteur_arc = Arc(x="x", y="y", radius="r",
-                      start_angle=0.0, end_angle="theta",
-                      line_color="blue",
-                      line_width=3,
-                      direction ='anticlock'
-                      )
-    plot.scatter(source=source_4,x='x',y='y',marker='triangle',size=15,angle='theta')
-    secteur_line = Line(x="x", y="y",
-                        line_color="blue",
-                        line_width=3
-                        )
-    secteur_text = Text(x="x", y="y",
-                        text_color="blue",
-                        text="texte"
-                        )
+    Fe = 11025
+    t = np.arange(0, 2, 1 / Fe)
+    y = np.zeros(shape=(t.shape[0],2),dtype=np.float32)
+    y = amp[0] * np.sin(2 * np.pi * freq[0] * t)
+    y += amp[1] * np.sin(2 * np.pi * freq[1] * t)
+    y += amp[2] * np.sin(2 * np.pi * freq[2] * t)
+    plot.xaxis.axis_label=r"$$t$$"
+    plot.yaxis.axis_label=r"$$y$$"
+    source_1 = ColumnDataSource(dict(x=t, y=y))
+    source_2 = ColumnDataSource(dict(freq=freq,amp=amp))
+    le_sinus = plot.line('x', 'y',
+                         source=source_1,
+                         line_width=3,
+                         line_alpha=0.6,
+                         name="Mon_sinus")
+    
                 
-    plot.add_glyph(source_1, secteur_arc)
-    plot.add_glyph(source_2, secteur_line)
-    #plot.add_glyph(source_3, secteur_text)
-    image1 = ImageURL(url="url", x="x", y="y", w=0.45, h=0.1, anchor="left")
-    plot.add_glyph(source_3, image1)
 
-    theta_slider = Slider(start=0., end=np.pi*2, value=theta, step=.1, title="Theta")
+    freq1_slider = Slider(start=20., end=1000, value=freq[0], step=1, title="Fréquence 1")
+    amp1_slider = Slider(start=0., end=1, value=amp[0], step=.05, title="Amplitude 1")
+    freq2_slider = Slider(start=0., end=1000, value=freq[1], step=1, title="Fréquence 2")
+    amp2_slider = Slider(start=0., end=1, value=amp[1], step=.05, title="Amplitude 2")
+    freq3_slider = Slider(start=0., end=1000, value=freq[2], step=1, title="Fréquence 3")
+    amp3_slider = Slider(start=0., end=1, value=amp[2], step=.05, title="Amplitude 3")
     callback = CustomJS(args=dict(source1=source_1,
                                   source2=source_2,
-                                  source3=source_3,
-                                  source4=source_4,
-                                  theta=theta_slider),
+                                  f1=freq1_slider,
+                                  a1=amp1_slider,
+                                  f2=freq2_slider,
+                                  a2=amp2_slider,
+                                  f3=freq3_slider,
+                                  a3=amp3_slider,
+                                  ),
                         code="""
         var csrfToken = '';
         var i=0;
@@ -149,41 +139,65 @@ def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
             }
         var xhr = new XMLHttpRequest();
         
-        xhr.open("POST", "/index/theta_slider_change", true);
+        xhr.open("POST", "/index/melange_slider_change", true);
         xhr.setRequestHeader('mode', 'same-origin');
         var dataForm = new FormData();
         dataForm.append('csrfmiddlewaretoken', csrfToken);
-        dataForm.append('theta', theta.value);
+        dataForm.append('f1', f1.value);
+        dataForm.append('f2', f2.value);
+        dataForm.append('f3', f3.value);
+        dataForm.append('a1', a1.value);
+        dataForm.append('a2', a2.value);
+        dataForm.append('a3', a3.value);
         xhr.responseType = 'json';
         xhr.onload = function() {    
             reponse =  xhr.response
             const plot = Bokeh.documents[0].get_model_by_name('Mes_donnees')
             source1.data.x = reponse['s1_x'];
             source1.data.y = reponse['s1_y'];
-            source1.data.r = reponse['s1_r'];
-            source1.data.theta = reponse['s1_theta'];
-            source2.data.x = reponse['s2_x'];
-            source2.data.y = reponse['s2_y'];
-            source3.data.x = reponse['s3_x'];
-            source3.data.y = reponse['s3_y'];
-            source3.data.url = reponse['s3_url'];
-            source4.data.x = reponse['s4_x']
-            source4.data.y = reponse['s4_y']
-            source4.data.theta = reponse['s1_theta']
+            source2.data.freq = reponse['freq'];
+            source2.data.amp = reponse['amp'];
             source1.change.emit();
             source2.change.emit();
-            source3.change.emit();
-            source4.change.emit();
             }
         xhr.send(dataForm);
         """)
 
-    theta_slider.js_on_change('value', callback)
-    layout = row(plot,theta_slider)
+    freq1_slider.js_on_change('value', callback)
+    amp1_slider.js_on_change('value', callback)
+    freq2_slider.js_on_change('value', callback)
+    amp2_slider.js_on_change('value', callback)
+    freq3_slider.js_on_change('value', callback)
+    amp3_slider.js_on_change('value', callback)
+    layout = column(freq1_slider, amp1_slider,
+                    freq2_slider, amp2_slider,
+                    freq3_slider, amp3_slider,
+                    plot)
+    urs =  ts_crs.convert_npson_uri(y, Fe)
     script1, div1  = components(layout, "Graphique")
-    code_html = render(request,"melangeSinusMultiple_bkh.html", dict(script1=script1, div=div1))
+    code_html = render(request,"melangeSinusMultiple_bkh.html", dict(script1=script1, div=div1,data_snd= urs))
     return code_html
 
+@xframe_options_exempt
+def melange_slider_change(request: HttpRequest) -> HttpResponse:
+    freq=[220, 0, 0]
+    amp = [1, 0, 0]
+    b_ok, val = ts_crs.get_arg_post(request,
+                                    ['f1','f2', 'f3', 'a1', 'a2', 'a3'])
+    if b_ok:
+        freq= [float(val[0]), float(val[1]), float(val[2])]
+        amp= [float(val[3]), float(val[4]), float(val[5])]
+    Fe = 11025
+    t = np.arange(0, 2, 1 / Fe)
+    y = np.zeros(shape=(t.shape[0],2),dtype=np.float32)
+    y = amp[0] * np.sin(2 * np.pi * freq[0] * t)
+    y += amp[1] * np.sin(2 * np.pi * freq[1] * t)
+    y += amp[2] * np.sin(2 * np.pi * freq[2] * t)
+    urs =  ts_crs.convert_npson_uri(y, Fe)
+
+    return JsonResponse(dict(s1_x=t.tolist(),s1_y=y.tolist(),
+                             s2_x=freq, s2_y=amp))
+ 
 
 @xframe_options_exempt
 def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
@@ -285,7 +299,7 @@ def cercle_trigo_bkh(request: HttpRequest) -> HttpResponse:
         """)
 
     theta_slider.js_on_change('value', callback)
-    layout = row(plot,theta_slider)
+    layout = column(theta_slider,plot)
     script1, div1  = components(layout, "Graphique")
     code_html = render(request,"cercle_trigo_bkh.html", dict(script1=script1, div=div1))
     return code_html
@@ -373,7 +387,7 @@ def freq_phase(request: HttpRequest) -> HttpResponse:
 
     freq_slider.js_on_change('value', callback)
     phase_slider.js_on_change('value', callback)
-    layout = row(plot, column(freq_slider, phase_slider))
+    layout = column(freq_slider, phase_slider,plot)
     script1, div1  = components(layout, "Graphique")
     code_html = render(request,"sinus_slider.html", dict(script1=script1, div=div1))
     return code_html
