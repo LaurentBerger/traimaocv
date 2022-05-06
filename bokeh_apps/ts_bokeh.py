@@ -95,8 +95,8 @@ def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
     if b_ok:
         freq= [float(val[0]), float(val[1]), float(val[2])]
         amp= [float(val[3]), float(val[4]), float(val[5])]
-    plot = figure(width=600,
-                  height=600,
+    plot = figure(width=400,
+                  height=400,
                   title="Mélange de sinus",
                   name="Mes_donnees")
      
@@ -106,6 +106,7 @@ def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
     y = amp[0] * np.sin(2 * np.pi * freq[0] * t)
     y += amp[1] * np.sin(2 * np.pi * freq[1] * t)
     y += amp[2] * np.sin(2 * np.pi * freq[2] * t)
+    y = np.clip(y, -1, 1)
     plot.xaxis.axis_label=r"$$t$$"
     plot.yaxis.axis_label=r"$$y$$"
     source_1 = ColumnDataSource(dict(x=t, y=y))
@@ -203,6 +204,7 @@ def melange_slider_change(request: HttpRequest) -> HttpResponse:
     y = amp[0] * np.sin(2 * np.pi * freq[0] * t)
     y += amp[1] * np.sin(2 * np.pi * freq[1] * t)
     y += amp[2] * np.sin(2 * np.pi * freq[2] * t)
+    y = np.clip(y, -1, 1)
     urs =  ts_crs.convert_npson_uri(y, Fe)
     
     return JsonResponse(dict(s1_x=t.tolist(),s1_y=y.tolist(),
