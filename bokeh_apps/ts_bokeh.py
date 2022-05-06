@@ -102,7 +102,7 @@ def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
                   title="Mélange de sinus",
                   name="Mes_donnees")
     Fe = 11025 
-    y, t = melange_sinus(freq, amp, Fe=Fe)
+    y, t = melange_sinus(freq, amp, Fe=11025)
     plot.xaxis.axis_label=r"$$t$$"
     plot.yaxis.axis_label=r"$$y$$"
     source_1 = ColumnDataSource(dict(x=t, y=y))
@@ -170,12 +170,12 @@ def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
         xhr.send(dataForm);
         """)
 
-    freq1_slider.js_on_change('value', callback)
-    amp1_slider.js_on_change('value', callback)
-    freq2_slider.js_on_change('value', callback)
-    amp2_slider.js_on_change('value', callback)
-    freq3_slider.js_on_change('value', callback)
-    amp3_slider.js_on_change('value', callback)
+    freq1_slider.js_on_change('value_throttled', callback)
+    amp1_slider.js_on_change('value_throttled', callback)
+    freq2_slider.js_on_change('value_throttled', callback)
+    amp2_slider.js_on_change('value_throttled', callback)
+    freq3_slider.js_on_change('value_throttled', callback)
+    amp3_slider.js_on_change('value_throttled', callback)
     layout = column(freq1_slider, amp1_slider,
                     freq2_slider, amp2_slider,
                     freq3_slider, amp3_slider,
