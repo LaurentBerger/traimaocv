@@ -119,12 +119,12 @@ def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
     
                 
 
-    freq1_slider = Slider(start=20., end=1000, value=freq[0], step=1, title="Fréquence 1")
-    amp1_slider = Slider(start=0., end=1, value=amp[0], step=.05, title="Amplitude 1")
-    freq2_slider = Slider(start=0., end=1000, value=freq[1], step=1, title="Fréquence 2")
-    amp2_slider = Slider(start=0., end=1, value=amp[1], step=.05, title="Amplitude 2")
-    freq3_slider = Slider(start=0., end=1000, value=freq[2], step=1, title="Fréquence 3")
-    amp3_slider = Slider(start=0., end=1, value=amp[2], step=.05, title="Amplitude 3")
+    freq1_slider = Slider(start=20., end=1000, value=freq[0], step=1, title="Fréquence 1",syncable=True)
+    amp1_slider = Slider(start=0., end=1, value=amp[0], step=.05, title="Amplitude 1",syncable=True)
+    freq2_slider = Slider(start=0., end=1000, value=freq[1], step=1, title="Fréquence 2",syncable=True)
+    amp2_slider = Slider(start=0., end=1, value=amp[1], step=.05, title="Amplitude 2",syncable=True)
+    freq3_slider = Slider(start=0., end=1000, value=freq[2], step=1, title="Fréquence 3",syncable=True)
+    amp3_slider = Slider(start=0., end=1, value=amp[2], step=.05, title="Amplitude 3",syncable=True)
     callback = CustomJS(args=dict(source1=source_1,
                                   source2=source_2,
                                   f1=freq1_slider,
