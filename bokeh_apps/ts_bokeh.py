@@ -99,7 +99,7 @@ def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
         amp= [float(val[3]), float(val[4]), float(val[5])]
     plot = figure(width=400,
                   height=400,
-                  title="Mélange de sinus",
+                  title="Mélange de sinus (utiliser la loupe)",
                   name="Mes_donnees")
     Fe = 11025 
     y, t = melange_sinus(freq, amp, Fe=11025)
