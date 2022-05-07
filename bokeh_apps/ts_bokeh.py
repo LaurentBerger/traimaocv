@@ -88,6 +88,107 @@ def melange_sinus(freq, amp, Fe=11025,):
     y = np.clip(y, -1, 1)
     return y, t
     
+def sinus_amorti(freq=220, tau=10, Fe=11025,):
+    t = np.arange(0, 1, 1 / Fe)
+    y = np.exp(-t * tau) * np.sin(2 * np.pi * freq * t)
+    y = np.clip(y, -1, 1)
+    return y, t
+
+@xframe_options_exempt
+def sinus_amorti_bkh(request: HttpRequest) -> HttpResponse:
+    freq= 220
+    tau = 10
+    b_ok, val = ts_crs.get_arg_post(request,
+                                    ['freq','tau'])
+    if b_ok:
+        freq= float(val[0])
+        tau= float(val[1])
+    plot = figure(width=400,
+                  height=400,
+                  title="Sinus amorti(utiliser la loupe)",
+                  name="Mes_donnees")
+    Fe = 22050
+    y, t = sinus_amorti(freq, tau, Fe)
+    plot.xaxis.axis_label=r"$$t$$"
+    plot.yaxis.axis_label=r"$$y$$"
+    source_1 = ColumnDataSource(dict(x=t, y=y))
+    source_2 = ColumnDataSource(dict(freq=[freq],tau=[tau]))
+    le_sinus = plot.line('x', 'y',
+                         source=source_1,
+                         line_width=3,
+                         line_alpha=0.6,
+                         name="Mon_sinus")
+    
+                
+
+    freq_slider = Slider(start=20., end=4000, value=freq, step=1, title="Fréquence",syncable=True)
+    tau_slider = Slider(start=0., end=10, value=tau, step=.1, title="Amortissement",syncable=True)
+    callback = CustomJS(args=dict(source1=source_1,
+                                  source2=source_2,
+                                  freq=freq_slider,
+                                  tau=tau_slider),
+                        code="""
+        var csrfToken = '';
+        var i=0;
+        var inputElems = document.querySelectorAll('input');
+        var reponse='';
+        for (i = 0; i < inputElems.length; ++i) {
+            if (inputElems[i].name === 'csrfmiddlewaretoken') {
+                csrfToken = inputElems[i].value;
+                break;
+                }
+            }
+        var xhr = new XMLHttpRequest();
+        
+        xhr.open("POST", "/index/sinus_amorti_slider_change", true);
+        xhr.setRequestHeader('mode', 'same-origin');
+        var dataForm = new FormData();
+        dataForm.append('csrfmiddlewaretoken', csrfToken);
+        dataForm.append('freq', freq.value);
+        dataForm.append('tau', tau.value);
+        xhr.responseType = 'json';
+        xhr.onload = function() {    
+            reponse =  xhr.response
+            const plot = Bokeh.documents[0].get_model_by_name('Mes_donnees')
+            source1.data.x = reponse['s1_x'];
+            source1.data.y = reponse['s1_y'];
+            source2.data.freq = reponse['freq'];
+            source2.data.tau = reponse['tau'];
+            var audio_b64 = reponse['base64'];
+            const aud = document.getElementById("audio_tag1")
+            aud.src="data:audio/wav;base64,"+audio_b64
+            source1.change.emit();
+            source2.change.emit();
+            }
+        xhr.send(dataForm);
+        """)
+
+    freq_slider.js_on_change('value_throttled', callback)
+    tau_slider.js_on_change('value_throttled', callback)
+    layout = column(freq_slider, tau_slider,
+                    plot)
+    urs =  ts_crs.convert_npson_uri(y, Fe)
+    script1, div1  = components(layout, "Graphique")
+    code_html = render(request,"SinusAmorti_bkh.html", dict(script1=script1, div=div1,data_snd= urs))
+    return code_html
+
+@xframe_options_exempt
+def sinus_amorti_slider_change(request: HttpRequest) -> HttpResponse:
+    freq= 220
+    tau = 10
+    b_ok, val = ts_crs.get_arg_post(request,
+                                    ['freq','tau'])
+    if b_ok:
+        freq= float(val[0])
+        tau= float(val[1])
+    Fe = 11025 
+    y, t = sinus_amorti(freq, tau, Fe)
+    urs =  ts_crs.convert_npson_uri(y, Fe)
+    
+    return JsonResponse(dict(s1_x=t.tolist(),s1_y=y.tolist(),
+                             s2_freq=freq, s2_tau=tau, 
+                             base64=urs))
+    
 @xframe_options_exempt
 def sin_melange_bkh(request: HttpRequest) -> HttpResponse:
     freq=[220, 0, 0]
