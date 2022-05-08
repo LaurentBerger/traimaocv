@@ -9,7 +9,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 
 from bokeh.io import curdoc
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, Slider, Toolbar, Legend, LegendItem
+from bokeh.models import ColumnDataSource, Slider, Toolbar, Legend, LegendItem, Div
 from bokeh.plotting import figure
 from bokeh.document import Document
 from bokeh.embed import server_document
@@ -92,7 +92,9 @@ def sinus_amorti(freq=220, tau=10, Fe=11025,):
     t = np.arange(0, 1, 1 / Fe)
     y = np.exp(-t * tau) * np.sin(2 * np.pi * freq * t)
     y = np.clip(y, -1, 1)
-    return y, t
+    S = np.fft.fft(y, axis=0)
+    nu = np.fft.fftfreq(t.shape[0])*Fe
+    return y, t, nu, np.abs(S)
 
 @xframe_options_exempt
 def sinus_amorti_bkh(request: HttpRequest) -> HttpResponse:
@@ -103,28 +105,46 @@ def sinus_amorti_bkh(request: HttpRequest) -> HttpResponse:
     if b_ok:
         freq= float(val[0])
         tau= float(val[1])
-    plot = figure(width=400,
-                  height=400,
-                  title="Sinus amorti(utiliser la loupe)",
-                  name="Mes_donnees")
+    plot_time = figure(width=400,
+                       height=200,
+                       title="Sinus amorti(utiliser la loupe)",
+                       name="Mes_donnees_t")
+    plot_fft = figure(width=400,
+                       height=200,
+                       title="Module du spectre",
+                       name="Mes_donnees_f")
     Fe = 22050
-    y, t = sinus_amorti(freq, tau, Fe)
-    plot.xaxis.axis_label=r"$$t$$"
-    plot.yaxis.axis_label=r"$$y$$"
+    y, t, nu, Y = sinus_amorti(freq, tau, Fe)
     source_1 = ColumnDataSource(dict(x=t, y=y))
     source_2 = ColumnDataSource(dict(freq=[freq],tau=[tau]))
-    le_sinus = plot.line('x', 'y',
-                         source=source_1,
-                         line_width=3,
-                         line_alpha=0.6,
-                         name="Mon_sinus")
-    
-                
+    source_3 = ColumnDataSource(dict(nu=nu,Y=Y))
+    le_sinus = plot_time.line('x', 'y',
+                              source=source_1,
+                              line_width=3,
+                              line_alpha=0.6,
+                              )
+    plot_time.xaxis.axis_label=r"$$t (s)$$"
+    plot_time.yaxis.axis_label=r"$$y$$"
+    le_spectre = plot_fft.scatter('nu' ,'Y',
+                               source=source_3,
+                               name="Mon_spectre",
+                               line_width=3,
+                               line_alpha=0.6)
+    plot_fft.xaxis.axis_label=r"$$\nu (Hz)$$"
+    plot_fft.yaxis.axis_label=r"$$u.a.$$"
+    texte1 = r"$$y(t) =\sin(2\pi f t)  \exp^{-at}$$"
+    texte2 = r"$$Y(\nu)=\frac{2\pi f}{(a+i2\pi\nu)^2+(2\pi f)^2}$$"
+    div1 = Div(width=400, height=50, background="#fafafa",
+              text=texte1)
+    div2 = Div(width=400, height=50, background="#fafafa",
+              text=texte2)
+              
 
-    freq_slider = Slider(start=20., end=4000, value=freq, step=1, title="Fréquence",syncable=True)
-    tau_slider = Slider(start=0., end=10, value=tau, step=.1, title="Amortissement",syncable=True)
+    freq_slider = Slider(start=20., end=4000, value=freq, step=1, title=r"Fréquence f",syncable=True)
+    tau_slider = Slider(start=0., end=10, value=tau, step=.1, title="Amortissement a",syncable=True)
     callback = CustomJS(args=dict(source1=source_1,
                                   source2=source_2,
+                                  source3=source_3,
                                   freq=freq_slider,
                                   tau=tau_slider),
                         code="""
@@ -152,6 +172,8 @@ def sinus_amorti_bkh(request: HttpRequest) -> HttpResponse:
             const plot = Bokeh.documents[0].get_model_by_name('Mes_donnees')
             source1.data.x = reponse['s1_x'];
             source1.data.y = reponse['s1_y'];
+            source3.data.nu = reponse['s3_nu'];
+            source3.data.Y = reponse['s3_Y'];
             source2.data.freq = reponse['freq'];
             source2.data.tau = reponse['tau'];
             var audio_b64 = reponse['base64'];
@@ -159,14 +181,15 @@ def sinus_amorti_bkh(request: HttpRequest) -> HttpResponse:
             aud.src="data:audio/wav;base64,"+audio_b64
             source1.change.emit();
             source2.change.emit();
+            source3.change.emit();
             }
         xhr.send(dataForm);
         """)
 
     freq_slider.js_on_change('value_throttled', callback)
     tau_slider.js_on_change('value_throttled', callback)
-    layout = column(freq_slider, tau_slider,
-                    plot)
+    layout = column(freq_slider, tau_slider,div1,
+                    plot_time, div2, plot_fft)
     urs =  ts_crs.convert_npson_uri(y, Fe)
     script1, div1  = components(layout, "Graphique")
     code_html = render(request,"SinusAmorti_bkh.html", dict(script1=script1, div=div1,data_snd= urs))
@@ -182,11 +205,12 @@ def sinus_amorti_slider_change(request: HttpRequest) -> HttpResponse:
         freq= float(val[0])
         tau= float(val[1])
     Fe = 11025 
-    y, t = sinus_amorti(freq, tau, Fe)
+    y, t, nu, Y = sinus_amorti(freq, tau, Fe)
     urs =  ts_crs.convert_npson_uri(y, Fe)
     
     return JsonResponse(dict(s1_x=t.tolist(),s1_y=y.tolist(),
-                             s2_freq=freq, s2_tau=tau, 
+                             s2_freq=freq, s2_tau=tau,
+                             s3_nu=nu.tolist(), s3_Y= Y.tolist(),                             
                              base64=urs))
     
 @xframe_options_exempt
