@@ -64,6 +64,8 @@ urlpatterns = [
     path('index/melange_slider_change', ts_bkh.melange_slider_change,name="melange_slider_change"),
     path('index/sinus_amorti_bkh', ts_bkh.sinus_amorti_bkh,name="sinus_amorti_bkh"),
     path('index/sinus_amorti_slider_change', ts_bkh.sinus_amorti_slider_change,name="sinus_amorti_slider_change"),
+    path('index/trans_simil_bkh', ts_bkh.trans_simil_bkh,name="trans_simil_bkh"),
+    path('index/trans_simil_slider_change', ts_bkh.trans_simil_slider_change,name="trans_simil_slider_change"),
     path('favicon.ico',RedirectView.as_view(url='/static/favicon.ico')),
 ]
 base_path = settings.BASE_PATH

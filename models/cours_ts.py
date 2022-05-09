@@ -94,6 +94,12 @@ def porte(t):
     y[ind]=0
     return y
 
+def triangle(t):
+    ind = np.where(np.logical_or(t<-1/2, t>1/2))
+    y = 2*(0.5*np.ones(shape=(t.shape[0], ), dtype = np.float32)-np.abs(t))
+    y[ind]=0
+    return y
+
 def  reconstruction(tpsContinu,taille,Fe,x):
     N = x.shape[0]
     tr = tpsContinu
