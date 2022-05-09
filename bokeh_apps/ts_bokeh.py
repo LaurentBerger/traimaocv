@@ -98,7 +98,10 @@ def trans_simil(a_simil=1, t0=0, fct='Porte'):
         y = np.sin(a_simil*(t-t0))
     else:
         y = 0*t
-    return y, t
+    nom_fct =  fct + "(" + str(a_simil) 
+    nom_fct +=  "(t-" + str(t0) +"))"
+    
+    return y, t, nom_fct
 
 @xframe_options_exempt
 def trans_simil_bkh(request: HttpRequest) -> HttpResponse:
@@ -111,20 +114,23 @@ def trans_simil_bkh(request: HttpRequest) -> HttpResponse:
     if b_ok:
         a_simil, t0, fct = float(val[0]), float(val[1]), val[2]
     # Génération d'une image à une fréquence spatiale donnée
-    plot_original = figure(width=400,
-                           height=200,
-                           title="Original : porte(t)",
-                           name="Mes_donnees_o")
-    plot_simil = figure(width=400,
-                        height=200,
-                        title="porte(a(t-t0))",
-                        name="Mes_donnees_s")
     Fe = 22050
-    y, t = trans_simil(1,0)
-    y_s, t = trans_simil(a_simil,t0)
+    y, t, nom_fct1 = trans_simil(1,0)
+    y_s, t, nom_fct2 = trans_simil(a_simil,t0)
     source_1 = ColumnDataSource(dict(x=t, y=y))
     source_2 = ColumnDataSource(dict(a_simil=[a_simil],t0=[t0]))
     source_3 = ColumnDataSource(dict(x=t,y=y_s))
+    source_4 = ColumnDataSource(dict(nom=[nom_fct1]))
+    source_5 = ColumnDataSource(dict(nom=[nom_fct2]))
+    texte1 = r"$$y(t) =\sin(2\pi f t)  \exp^{-at}$$"
+    texte2 = r"$$Y(\nu)=\frac{2\pi f}{(a+i2\pi\nu)^2+(2\pi f)^2}$$"
+    plot_original = figure(width=400,
+                           height=200,
+                           title="nom",
+                           name="Mes_donnees_o")
+    plot_simil = figure(width=400,
+                        height=200,
+                        title="porte(a(t-t0))")
     le_sinus = plot_original.line('x', 'y',
                                   source=source_1,
                                   line_width=3,
@@ -170,7 +176,7 @@ def trans_simil_bkh(request: HttpRequest) -> HttpResponse:
         xhr.responseType = 'json';
         xhr.onload = function() {    
             reponse =  xhr.response
-            const plot = Bokeh.documents[0].get_model_by_name('Mes_donnees')
+            const plot = Bokeh.documents[0].get_model_by_name('Mes_donnees_o')
             source1.data.x = reponse['s1_x'];
             source1.data.y = reponse['s1_y'];
             source2.data.a_simil = reponse['s2_a'];
@@ -188,7 +194,8 @@ def trans_simil_bkh(request: HttpRequest) -> HttpResponse:
     t0_slider.js_on_change('value', callback)
     menu_fct.js_on_change('value', callback)
     layout = column(menu_fct, a_slider, t0_slider,
-                    plot_original, plot_simil)
+                    plot_original,
+                    plot_simil)
     script1, div1  = components(layout, "Graphique")
     code_html = render(request,"TransSimil_bkh.html", dict(script1=script1, div=div1))
     return code_html
