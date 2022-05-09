@@ -122,8 +122,6 @@ def trans_simil_bkh(request: HttpRequest) -> HttpResponse:
     source_3 = ColumnDataSource(dict(x=t,y=y_s))
     source_4 = ColumnDataSource(dict(nom=[nom_fct1]))
     source_5 = ColumnDataSource(dict(nom=[nom_fct2]))
-    texte1 = r"$$y(t) =\sin(2\pi f t)  \exp^{-at}$$"
-    texte2 = r"$$Y(\nu)=\frac{2\pi f}{(a+i2\pi\nu)^2+(2\pi f)^2}$$"
     plot_original = figure(width=400,
                            height=200,
                            title="nom",
@@ -209,8 +207,8 @@ def trans_simil_slider_change(request: HttpRequest) -> HttpResponse:
     if b_ok:
         a_simil, t0, fct = float(val[0]), float(val[1]), val[2]
     Fe = 11025 
-    y, t = trans_simil(1,0, fct)
-    y_s, t = trans_simil(a_simil,t0, fct)
+    y, t, _ = trans_simil(1,0, fct)
+    y_s, t, _ = trans_simil(a_simil,t0, fct)
     return JsonResponse(dict(s1_x=t.tolist(),s1_y=y.tolist(),
                              s2_a_simil=a_simil, s2_t0=t0,
                              s3_x=t.tolist(), s3_y= y_s.tolist()))
