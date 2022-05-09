@@ -98,9 +98,17 @@ def trans_simil(a_simil=1, t0=0, fct='Porte'):
         y = np.sin(a_simil*(t-t0))
     else:
         y = 0*t
-    nom_fct =  fct + "(" + str(a_simil) 
-    nom_fct +=  "(t-" + str(t0) +"))"
-    
+    if t0!=0:
+        var_fct =  "(t-" + str(np.round(t0,1)) +")"
+    else:
+        var_fct =  "t"
+    if a_simil != 1:
+        nom_fct =  fct + "(" + str(np.round(a_simil,1)) +\
+                   var_fct + ")"
+    elif var_fct == "t":
+        nom_fct =  fct + "(t)"
+    else:
+        nom_fct =  fct + var_fct
     return y, t, nom_fct
 
 @xframe_options_exempt
@@ -118,17 +126,18 @@ def trans_simil_bkh(request: HttpRequest) -> HttpResponse:
     y, t, nom_fct1 = trans_simil(1,0)
     y_s, t, nom_fct2 = trans_simil(a_simil,t0)
     source_1 = ColumnDataSource(dict(x=t, y=y))
-    source_2 = ColumnDataSource(dict(a_simil=[a_simil],t0=[t0]))
+    source_2 = ColumnDataSource(dict(a_simil=[a_simil],t0=[t0],
+                                     nom1=[nom_fct1],
+                                     nom2=[nom_fct2]))
     source_3 = ColumnDataSource(dict(x=t,y=y_s))
-    source_4 = ColumnDataSource(dict(nom=[nom_fct1]))
-    source_5 = ColumnDataSource(dict(nom=[nom_fct2]))
     plot_original = figure(width=400,
                            height=200,
-                           title="nom",
+                           title=nom_fct1,
                            name="Mes_donnees_o")
     plot_simil = figure(width=400,
                         height=200,
-                        title="porte(a(t-t0))")
+                        title=nom_fct2,
+                        name="Mes_donnees_s")
     le_sinus = plot_original.line('x', 'y',
                                   source=source_1,
                                   line_width=3,
@@ -174,13 +183,18 @@ def trans_simil_bkh(request: HttpRequest) -> HttpResponse:
         xhr.responseType = 'json';
         xhr.onload = function() {    
             reponse =  xhr.response
-            const plot = Bokeh.documents[0].get_model_by_name('Mes_donnees_o')
+            const plot1 = Bokeh.documents[0].get_model_by_name('Mes_donnees_o')
+            const plot2 = Bokeh.documents[0].get_model_by_name('Mes_donnees_s')
             source1.data.x = reponse['s1_x'];
             source1.data.y = reponse['s1_y'];
             source2.data.a_simil = reponse['s2_a'];
             source2.data.t0 = reponse['s2_t0'];
+            source2.data.nom1 = reponse['s2_nom1'];
+            source2.data.nom2= reponse['s2_nom2'];
             source3.data.x = reponse['s3_x'];
             source3.data.y = reponse['s3_y'];
+            plot1.title.text = source2.data.nom1
+            plot2.title.text = source2.data.nom2
             source1.change.emit();
             source2.change.emit();
             source3.change.emit();
@@ -207,10 +221,12 @@ def trans_simil_slider_change(request: HttpRequest) -> HttpResponse:
     if b_ok:
         a_simil, t0, fct = float(val[0]), float(val[1]), val[2]
     Fe = 11025 
-    y, t, _ = trans_simil(1,0, fct)
-    y_s, t, _ = trans_simil(a_simil,t0, fct)
+    y, t, nom1 = trans_simil(1,0, fct)
+    y_s, t, nom2 = trans_simil(a_simil,t0, fct)
     return JsonResponse(dict(s1_x=t.tolist(),s1_y=y.tolist(),
                              s2_a_simil=a_simil, s2_t0=t0,
+                             s2_nom1=nom1,
+                             s2_nom2=nom2,
                              s3_x=t.tolist(), s3_y= y_s.tolist()))
     
     
