@@ -29,9 +29,19 @@ def cercle_trigo(request):
     a = ts_crs.CercleTrigo(request)()
     return render(request,a[0], a[1])
 
+@xframe_options_exempt
+def cercle_trigo_bkh(request):
+    a = ts_bkh.CercleTrigoBkh(request)()
+    return render(request,a[0], a[1])
+
 @xframe_options_exempt    
 def trans_simil_bkh(request):
     a = ts_bkh.TransSimilBkh(request)()
+    return render(request,a[0], a[1])
+
+@xframe_options_exempt    
+def melange_sinus_bkh(request):
+    a = ts_bkh.MelangeSinusBkh(request)()
     return render(request,a[0], a[1])
 
 @xframe_options_exempt    
