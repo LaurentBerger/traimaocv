@@ -20,7 +20,8 @@ from bokeh.plotting import figure
 from bokeh.embed import file_html, components
 from bokeh.models import CustomJS, RangeSlider, ImageURL
 from bokeh.models import BoxSelectTool, LassoSelectTool, BoxZoomTool
-from bokeh.models import Ascii
+from bokeh.models import Ascii, LayoutDOM
+from bokeh.core.properties import Any, Dict, Instance, String
 
 import traimaocv.models.cours_ts as ts_crs
 from bokeh.models import MathML
@@ -142,8 +143,7 @@ class TransSimilBkh:
         self.nom_fct = self.liste_fct[0]
         self.Fe = 22050
         self.codeJS = CODE_TOKEN + """
-        var xhr = new XMLHttpRequest();
-        
+        var xhr = new XMLHttpRequest();        
         xhr.open("POST", "/index/trans_simil_slider_change", true);
         xhr.setRequestHeader('mode', 'same-origin');
         var dataForm = new FormData();
@@ -679,4 +679,92 @@ class SinusFreqPhaseBkh:
         layout = column(freq_slider, phase_slider,plot)
         script1, div1  = components(layout, "Graphique")
         return 'sinus_slider.html',{'script1':script1, 'div':div1,}
+
+
+# This defines some default options for the Graph3d feature of vis.js
+# See: https://visjs.github.io/vis-graph3d/examples/ for more details. Note
+# that we are fixing the size of this component, in ``options``, but
+# with additional work it could be made more responsive.
+DEFAULTS = {
+    'width':          '600px',
+    'height':         '600px',
+    'style':          'surface',
+    'showPerspective': True,
+    'showGrid':        True,
+    'keepAspectRatio': True,
+    'verticalRatio':   1.0,
+    'legendLabel':     'stuff',
+    'cameraPosition':  {
+        'horizontal': -0.35,
+        'vertical':    0.22,
+        'distance':    1.8,
+    }
+}
+
+# This custom extension model will have a DOM view that should layout-able in
+# Bokeh layouts, so use ``LayoutDOM`` as the base class. If you wanted to create
+# a custom tool, you could inherit from ``Tool``, or from ``Glyph`` if you
+# wanted to create a custom glyph, etc.
+class Surface3d(LayoutDOM):
+
+    # The special class attribute ``__implementation__`` should contain a string
+    # of JavaScript (or TypeScript) code that implements the JavaScript side
+    # of the custom extension model.
+    __implementation__ = "surface_3d.ts"
+
+    # Below are all the "properties" for this model. Bokeh properties are
+    # class attributes that define the fields (and their types) that can be
+    # communicated automatically between Python and the browser. Properties
+    # also support type validation. More information about properties in
+    # can be found here:
+    #
+    #    https://docs.bokeh.org/en/latest/docs/reference/core/properties.html#bokeh-core-properties
+
+    # This is a Bokeh ColumnDataSource that can be updated in the Bokeh
+    # server by Python code
+    data_source = Instance(ColumnDataSource)
+
+    # The vis.js library that we are wrapping expects data for x, y, and z.
+    # The data will actually be stored in the ColumnDataSource, but these
+    # properties let us specify the *name* of the column that should be
+    # used for each field.
+    x = String()
+
+    y = String()
+
+    z = String()
+
+    # Any of the available vis.js options for Graph3d can be set by changing
+    # the contents of this dictionary.
+    options = Dict(String, Any, default=DEFAULTS)        
+
+class Sinus3D:
+    ''' A 3D graph using the ColumnDataSource of Bokeh with the Graph3d library.
+    This example shows the custom extension feature of Bokeh.
+
+    '''
+
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+    def __call__(self):
     
+
+        x = np.arange(0, 300, 20)
+        y = np.arange(0, 300, 20)
+        xx, yy = np.meshgrid(x, y)
+        xx = xx.ravel()
+        yy = yy.ravel()
+
+        def compute(t):
+            value = np.sin(xx/50 + t/10) * np.cos(yy/50 + t/10) * 50 + 50
+            return dict(x=xx, y=yy, z=value)
+
+        source = ColumnDataSource(data=compute(0))
+
+        surface = Surface3d(x="x", y="y", z="z", data_source=source)
+        layout = column(surface)
+        script1, div1  = components(layout, "Graphique")
+        return 'sinus_3d.html',{'script1':script1, 'div':div1,}
+        
+

@@ -30,6 +30,11 @@ def freq_phase(request):
     return render(request, a[0], a[1])
 
 @xframe_options_exempt
+def sinus_3d(request):
+    a = ts_bkh.Sinus3D(request)()
+    return render(request, a[0], a[1])
+
+@xframe_options_exempt
 def cercle_trigo(request):
     a = ts_crs.CercleTrigo(request)()
     return render(request,a[0], a[1])
