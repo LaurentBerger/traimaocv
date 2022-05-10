@@ -598,53 +598,21 @@ class CercleTrigoBkh:
         return 'cercle_trigo_bkh.html',{'script1':script1, 'div':div1,}
 
 
+class SinusFreqPhaseBkh:
+    @staticmethod    
+    def sinus(freq, phase):
+        t = np.linspace(0, 10, 2000)
+        y = np.sin(np.pi*2*freq*t-phase)
+        return t, y
     
-@xframe_options_exempt
-def freq_phase(request: HttpRequest) -> HttpResponse:
-    freq = 1
-    b_ok, val = ts_crs.get_arg_post(request, ['freq'])
-    if b_ok:
-        freq = float(val[0])
-    phase = 0
-    b_ok, val = ts_crs.get_arg_post(request, ['phase'])
-    if b_ok:
-        phase = float(val[0])
-
-    x = np.linspace(0, 10, 500)
-    y = np.sin(np.pi*2*freq*x-phase)
-    url = latex_url([freq, phase], latex_sinus_freq_phase)
-
-    source_1 = ColumnDataSource(data=dict(x=x, y=y))
-    #source_2 = ColumnDataSource(data=dict(x=x, y=y,url=[url]))
-
-    plot = figure(y_range=(-1.5, 1.5), width=600, height=600,name="Mes_donnees")
-    plot.xaxis.axis_label=r"$$t$$"
-    plot.yaxis.axis_label=r"$$y$$"
-    le_sinus = plot.line('x', 'y',
-                         source=source_1,
-                         line_width=3,
-                         line_alpha=0.6,
-                         name="Mon_sinus")
-    legend = Legend(items=[LegendItem(label=r"sin(2.pi.f.t-phi)", renderers=[le_sinus], index=0)])
-    plot.add_layout(legend)
-    plot.add_tools(BoxSelectTool())
-    freq_slider = Slider(start=0., end=10, value=freq, step=.1, title=r"f")
-    phase_slider = Slider(start=0., end=2*np.pi, value=phase, step=.1, title="phi")
-    callback = CustomJS(args=dict(source=source_1, freq=freq_slider, phase=phase_slider),
-                        code="""
-        var csrfToken = '';
-        var i=0;
-        var inputElems = document.querySelectorAll('input');
-        var reponse='';
-        for (i = 0; i < inputElems.length; ++i) {
-            if (inputElems[i].name === 'csrfmiddlewaretoken') {
-                csrfToken = inputElems[i].value;
-                break;
-                }
-            }
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+        self.theta=1
+        self.codeJS = CODE_TOKEN + """
         var xhr = new XMLHttpRequest();
-        
-        xhr.open("POST", "/index/slider_change", true);
+      
+        xhr.open("POST", "/index/freq_phase_slider_change", true);
         xhr.setRequestHeader('mode', 'same-origin');
         var dataForm = new FormData();
         dataForm.append('csrfmiddlewaretoken', csrfToken);
@@ -659,79 +627,56 @@ def freq_phase(request: HttpRequest) -> HttpResponse:
             source.change.emit();
             }
         xhr.send(dataForm);
-        """)
-
-    freq_slider.js_on_change('value', callback)
-    phase_slider.js_on_change('value', callback)
-    layout = column(freq_slider, phase_slider,plot)
-    script1, div1  = components(layout, "Graphique")
-    code_html = render(request,"sinus_slider.html", dict(script1=script1, div=div1))
-    return code_html
-
+        """
     
-@xframe_options_exempt
-def sinus_slider(request: HttpRequest) -> HttpResponse:
-    freq = 1
-    b_ok, val = ts_crs.get_arg_post(request, ['freq'])
-    if b_ok:
-        freq = float(val[0])
+    @staticmethod    
+    def freq_phase_slider_change(request: HttpRequest) -> HttpResponse:
+        freq = 1
+        phase = 0
+        b_ok, val = ts_crs.get_arg_post(request, ['freq'])
+        if b_ok:
+            freq = float(val[0])
+        b_ok, val = ts_crs.get_arg_post(request, ['phase'])
+        if b_ok:
+            phase = float(val[0])
 
-    x = np.linspace(0, 10, 2000)
-    y = np.sin(np.pi*2*freq*x-phase)
-    source = ColumnDataSource(data=dict(x=x, y=y))
+        x, y = SinusFreqPhaseBkh.sinus(freq, phase)
+        return JsonResponse(dict(x=x.tolist(),y=y.tolist())) 
 
-    plot = figure(y_range=(-10, 10), width=400, height=400,title="Ma Courbe",name="Mes_donnees")
+    def __call__(self):
+        self.freq = 1
+        self.phase = 0
+        b_ok, val = ts_crs.get_arg_post(self.request, ['freq'])
+        if b_ok:
+            self.freq = float(val[0])
+        b_ok, val = ts_crs.get_arg_post(self.request, ['phase'])
+        if b_ok:
+            self.phase = float(val[0])
 
-    plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6,name="Mon_sinus")
+        x, y = SinusFreqPhaseBkh.sinus(self.freq, self.phase)
+        url = latex_url([self.freq, self.phase], latex_sinus_freq_phase)
 
-    amp_slider = Slider(start=0.1, end=10, value=freq, step=.1, title="Amplitude")
-    callback = CustomJS(args=dict(source=source, amp=amp_slider),
-                        code="""
-        var csrfToken = '';
-        var i=0;
-        var inputElems = document.querySelectorAll('input');
-        var reponse='';
-        for (i = 0; i < inputElems.length; ++i) {
-            if (inputElems[i].name === 'csrfmiddlewaretoken') {
-                csrfToken = inputElems[i].value;
-                break;
-                }
-            }
-        var xhr = new XMLHttpRequest();
-        
-        xhr.open("POST", "/index/slider_change", true);
-        xhr.setRequestHeader('mode', 'same-origin');
-        var dataForm = new FormData();
-        dataForm.append('csrfmiddlewaretoken', csrfToken);
-        dataForm.append('freq', amp.value);
-        xhr.responseType = 'json';
-        xhr.onload = function() {    
-            reponse =  xhr.response
-            source.data.x = reponse['x'];
-            source.data.y = reponse['y'];
-            const plot = Bokeh.documents[0].get_model_by_name('Mes_donnees')
-            source.change.emit();
-            }
-        xhr.send(dataForm);
-        """)
+        source_1 = ColumnDataSource(data=dict(x=x, y=y))
 
-    amp_slider.js_on_change('value', callback)
-    layout = row(plot, column(amp_slider))
-    script1, div1  = components(layout, "Graphique")
-    code_html = render(request,"sinus_slider.html", dict(script1=script1, div=div1))
-    return code_html
+        plot = figure(y_range=(-1.5, 1.5), width=600, height=600,name="Mes_donnees")
+        plot.xaxis.axis_label=r"$$t$$"
+        plot.yaxis.axis_label=r"$$y$$"
+        le_sinus = plot.line('x', 'y',
+                             source=source_1,
+                             line_width=3,
+                             line_alpha=0.6,
+                             name="Mon_sinus")
+        legend = Legend(items=[LegendItem(label=r"sin(2.pi.f.t-phi)", renderers=[le_sinus], index=0)])
+        plot.add_layout(legend)
+        plot.add_tools(BoxSelectTool())
+        freq_slider = Slider(start=0., end=10, value=self.freq, step=.1, title=r"f")
+        phase_slider = Slider(start=0., end=2*np.pi, value=self.phase, step=.1, title="phi")
+        callback = CustomJS(args=dict(source=source_1, freq=freq_slider, phase=phase_slider),
+                            code=self.codeJS)
 
-@xframe_options_exempt
-def sinus_slider_change(request: HttpRequest) -> HttpResponse:
-    freq = 1
-    phase = 0
-    b_ok, val = ts_crs.get_arg_post(request, ['freq'])
-    if b_ok:
-        freq = float(val[0])
-    b_ok, val = ts_crs.get_arg_post(request, ['phase'])
-    if b_ok:
-        phase = float(val[0])
-
-    x = np.linspace(0, 10, 2000)
-    y = np.sin(np.pi*2*freq*x-phase)
-    return JsonResponse(dict(x=x.tolist(),y=y.tolist()))
+        freq_slider.js_on_change('value', callback)
+        phase_slider.js_on_change('value', callback)
+        layout = column(freq_slider, phase_slider,plot)
+        script1, div1  = components(layout, "Graphique")
+        return 'sinus_slider.html',{'script1':script1, 'div':div1,}
+    
