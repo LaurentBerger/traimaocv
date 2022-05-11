@@ -792,7 +792,7 @@ class Sinus3D:
         print("sinus3d_slider_change")
         xx, yy, zz, x2d,y2d,z = Sinus3D.mon_sinus3d(nu)
         return JsonResponse(dict(x=xx.tolist(), y=yy.tolist(), z=zz.tolist(),
-                                 img=z.tolist(),x2d=x2d,y2=y2d))
+                                 img=z.tolist(),x2d=x2d.tolist(),y2d=y2d.tolist()))
 
     def __call__(self):
         self.nu = 2
@@ -811,7 +811,7 @@ class Sinus3D:
         nu_slider.js_on_change('value', callback)
 
         surface = Surface3d(x="x", y="y", z="z", data_source=source_1,name="ma_surface3d")
-        #plot.image(image='z', source=source_2, x='x2d', y='y2d', dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
+        #plot.image(image='z', source=source_2, x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
         plot.image(image=[z], x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
         layout = column(nu_slider,surface, plot)
         script1, div1  = components(layout, "Graphique")
