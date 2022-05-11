@@ -811,10 +811,60 @@ class Sinus3D:
         nu_slider.js_on_change('value', callback)
 
         surface = Surface3d(x="x", y="y", z="z", data_source=source_1,name="ma_surface3d")
-        #plot.image(image='z', source=source_2, x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
-        plot.image(image=[z], x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
+        plot.image(image='z', source=source_2, x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
+        #plot.image(image=[z], x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
         layout = column(nu_slider,surface, plot)
         script1, div1  = components(layout, "Graphique")
         return 'sinus_3d.html',{'script1':script1, 'div':div1,}
         
+def image_var_slider(request: HttpRequest) -> HttpResponse:
+    nu = 2
+    b_ok, val = ts_crs.get_arg_post(request, ['nu'])
+    if b_ok:
+        nu = float(val[0])
+    print("image_var_slider")
+    xc, yc  = 150, 150
+    x = np.arange(0, 2 * xc, 2) 
+    y = np.arange(0, 2 * yc, 2)
+    x2d, y2d = np.meshgrid(x, y)
+    z = 32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5))
+    return JsonResponse(dict(img=z.tolist(),x2d=x2d.tolist(),y2d=y2d.tolist()))
+
+def image_var(request: HttpRequest):
+    nu = 2 
+    xc, yc  = 150, 150
+    x = np.arange(0, 2 * xc, 2) 
+    y = np.arange(0, 2 * yc, 2)
+    x2d, y2d = np.meshgrid(x, y)
+    z = 32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5))
+    plot = figure(width=600, height=600,name="Mes_donnees")
+
+    nu_slider = Slider(start=0., end=100, value=nu, step=1, title=r"nu")
+    source_2 = ColumnDataSource(data=dict(x2d=x2d, y2d=y2d, z=z))
+    callback = CustomJS(args=dict(source2=source_2, freq=nu_slider),
+                        code=CODE_TOKEN + """
+        var xhr = new XMLHttpRequest();
+      
+        xhr.open("POST", "/index/image_var_change", true);
+        xhr.setRequestHeader('mode', 'same-origin');
+        var dataForm = new FormData();
+        dataForm.append('csrfmiddlewaretoken', csrfToken);
+        dataForm.append('nu', freq.value);
+        xhr.responseType = 'json';
+        xhr.onload = function() {    
+            reponse =  xhr.response
+            source2.data.z = reponse['img'];
+            source2.data.x2d = reponse['x2d'];
+            source2.data.y2d = reponse['y2d'];
+            source2.change.emit();
+            }
+        xhr.send(dataForm);
+        """)
+    nu_slider.js_on_change('value', callback)
+
+    plot.image(image='z', source=source_2, x=0, y=0, dw=max(x), dh=max(y), palette="Spectral11", level="image")
+    #plot.image(image=[z], x=0, y=0, dw=max(x), dh=max(y), palette="Spectral11", level="image")
+    layout = column(nu_slider,plot)
+    script1, div1  = components(layout, "Graphique")
+    return render(request,'image_var.html',{'script1':script1, 'div':div1})
 
