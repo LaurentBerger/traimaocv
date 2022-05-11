@@ -747,23 +747,73 @@ class Sinus3D:
     def __init__(self, request=None, buf_memory=True):
         self.request = request
         self.memory = buf_memory
+        self.nu = 1
+        self.codeJS = CODE_TOKEN + """
+        var xhr = new XMLHttpRequest();
+      
+        xhr.open("POST", "/index/sinus3d_slider_change", true);
+        xhr.setRequestHeader('mode', 'same-origin');
+        var dataForm = new FormData();
+        dataForm.append('csrfmiddlewaretoken', csrfToken);
+        dataForm.append('nu', freq.value);
+        xhr.responseType = 'json';
+        xhr.onload = function() {    
+            reponse =  xhr.response
+            source1.data.x = reponse['x'];
+            source1.data.y = reponse['y'];
+            source1.data.z = reponse['z'];
+            source2.data.z = reponse['img'];
+            source2.data.x2d = reponse['x2d'];
+            source2.data.y2d = reponse['y2d'];
+            const plot = Bokeh.documents[0].get_model_by_name('ma_surface3d')
+            source1.change.emit();
+            source2.change.emit();
+            }
+        xhr.send(dataForm);
+        """
+    @staticmethod 
+    def mon_sinus3d(nu):
+        xc, yc  = 150, 150
+        x = np.arange(0, 2 * xc, 2) 
+        y = np.arange(0, 2 * yc, 2)
+        x2d, y2d = np.meshgrid(x, y)
+        z = 32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5))
+        xx = x2d.ravel()
+        yy = y2d.ravel()
+        zz = z.ravel()
+        return xx, yy, zz, x2d, y2d, z
+        
+    @staticmethod    
+    def sinus3d_slider_change(request: HttpRequest) -> HttpResponse:
+        nu = 2
+        b_ok, val = ts_crs.get_arg_post(request, ['nu'])
+        if b_ok:
+            nu = float(val[0])
+        print("sinus3d_slider_change")
+        xx, yy, zz, x2d,y2d,z = Sinus3D.mon_sinus3d(nu)
+        return JsonResponse(dict(x=xx.tolist(), y=yy.tolist(), z=zz.tolist(),
+                                 img=z.tolist(),x2d=x2d,y2=y2d))
+
     def __call__(self):
-    
+        self.nu = 2
+        b_ok, val = ts_crs.get_arg_post(self.request, ['nu'])
+        if b_ok:
+            self.freq = float(val[0])
+        xx, yy, zz, x2d,y2d,z = Sinus3D.mon_sinus3d(self.nu)
+        plot = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@image")])
 
-        x = np.arange(0, 300, 20)
-        y = np.arange(0, 300, 20)
-        xx, yy = np.meshgrid(x, y)
-        xx = xx.ravel()
-        yy = yy.ravel()
+        nu_slider = Slider(start=0., end=100, value=self.nu, step=1, title=r"nu")
+        source_1 = ColumnDataSource(data=dict(x=xx, y=yy, z=zz))
+        source_2 = ColumnDataSource(data=dict(x2d=xx, y2d=yy, z=zz))
+        source_3 = ColumnDataSource(data=dict(freq=[self.nu]))
+        callback = CustomJS(args=dict(source1=source_1, source2=source_2, freq=nu_slider),
+                            code=self.codeJS)
+        nu_slider.js_on_change('value', callback)
 
-        def compute(t):
-            value = np.sin(xx/50 + t/10) * np.cos(yy/50 + t/10) * 50 + 50
-            return dict(x=xx, y=yy, z=value)
-
-        source = ColumnDataSource(data=compute(0))
-
-        surface = Surface3d(x="x", y="y", z="z", data_source=source)
-        layout = column(surface)
+        surface = Surface3d(x="x", y="y", z="z", data_source=source_1,name="ma_surface3d")
+        #plot.image(image='z', source=source_2, x='x2d', y='y2d', dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
+        plot.image(image=[z], x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
+        layout = column(nu_slider,surface, plot)
         script1, div1  = components(layout, "Graphique")
         return 'sinus_3d.html',{'script1':script1, 'div':div1,}
         
