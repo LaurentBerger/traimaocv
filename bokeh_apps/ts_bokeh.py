@@ -762,17 +762,11 @@ class Sinus3D:
             source1.data.x = reponse['s1_x'];
             source1.data.y = reponse['s1_y'];
             source1.data.z = reponse['s1_z'];
-            //alert("img before");
-            //alert(source2.data.img.length);
-            //alert(source2.data.img[0].length);
             source2.data.img = reponse['s2_img'];
             source2.data.x = reponse['s2_x'];
             source2.data.y = reponse['s2_y'];
             source2.data.dw = reponse['s2_dw'];
             source2.data.dh = reponse['s2_dh'];
-            alert("img after");
-            alert(source2.data.img.length);
-            alert(source2.data.img[0].length);
             source1.change.emit();
             source2.change.emit();
             }
@@ -781,16 +775,17 @@ class Sinus3D:
     @staticmethod 
     def mon_sinus3d(nu):
         xc, yc  = 150, 150
-        x = np.arange(0, 2 * xc, 100) 
-        y = np.arange(0, 2 * yc, 100)
+        x = np.arange(0, 2 * xc, 10) 
+        y = np.arange(0, 2 * yc, 10)
         x2d, y2d = np.meshgrid(x, y)
-        z = np.round(32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5)),0)
-        xx = np.round(x2d.ravel(), 0)
-        yy = np.round(y2d.ravel(), 0)
-        zz = np.round(z.ravel(), 0)
-        print(xx.max(), yy.max(), zz.max(), z.max())
-        print(xx.min(), yy.min(), zz.min(), z.min())
-        return xx, yy, zz, z
+        z2d = np.round(32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5)),0)
+        x1d = np.round(x2d.ravel(), 0)
+        y1d = np.round(y2d.ravel(), 0)
+        z1d = np.round(z2d.ravel(), 0)
+        print(x1d.shape,y1d.shape,z1d.shape, z2d.shape)
+        print(x1d.max(), y1d.max(), z1d.max(), z2d.max())
+        print(x1d.min(), y1d.min(), z1d.min(), z2d.min())
+        return x1d, y1d, z1d, z2d
         
     @staticmethod    
     def sinus3d_slider_change(request: HttpRequest) -> HttpResponse:
@@ -799,39 +794,41 @@ class Sinus3D:
         if b_ok:
             nu = float(val[0])
         print("sinus3d_slider_change")
-        xx, yy, zz, z = Sinus3D.mon_sinus3d(nu)
+        x1d, y1d, z1d, z2d = Sinus3D.mon_sinus3d(nu)
+        print(x1d.shape,y1d.shape,z1d.shape, z2d.shape)
+        print(x1d.max(), y1d.max(), z1d.max(), z2d.max())
+        print(x1d.min(), y1d.min(), z1d.min(), z2d.min())
 
-        return JsonResponse(dict(s1_x=xx.tolist(), 
-                                 s1_y=yy.tolist(),
-                                 s1_z=zz.tolist(),
-                                 s2_img=[zz.tolist()],
+        return JsonResponse(dict(s1_x=x1d.tolist(), 
+                                 s1_y=y1d.tolist(),
+                                 s1_z=z1d.tolist(),
+                                 s2_img=[z2d.tolist()],
                                  s2_x=[0],
                                  s2_y=[0],
-                                 s2_dw=[int(xx.max())],
-                                 s2_dh=[int(yy.max())]))
+                                 s2_dw=[int(x1d.max())],
+                                 s2_dh=[int(y1d.max())]))
 
     def __call__(self):
         self.nu = 2
         b_ok, val = ts_crs.get_arg_post(self.request, ['nu'])
         if b_ok:
             self.freq = float(val[0])
-        xx, yy, zz,z = Sinus3D.mon_sinus3d(self.nu)
+        x1d, y1d, z1d, z2d = Sinus3D.mon_sinus3d(self.nu)
         plot = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@img")])
 
         nu_slider = Slider(start=0., end=100, value=self.nu, step=1, title=r"nu")
-        source_1 = ColumnDataSource(data=dict(x=xx, y=yy, z=zz))
-        source_2 = ColumnDataSource(data=dict(img=[z],
+        source_1 = ColumnDataSource(data=dict(x=x1d, y=y1d, z=z1d))
+        source_2 = ColumnDataSource(data=dict(img=[z2d],
                                               x=[0],
                                               y=[0],
-                                              dw=[int(xx.max())],
-                                              dh=[int(yy.max())]))
+                                              dw=[int(x1d.max())],
+                                              dh=[int(y1d.max())]))
         source_3 = ColumnDataSource(data=dict(freq=[self.nu]))
         callback = CustomJS(args=dict(source1=source_1, source2=source_2, freq=nu_slider),
                             code=self.codeJS)
         nu_slider.js_on_change('value', callback)
 
         surface = Surface3d(x="x", y="y", z="z", data_source=source_1,name="ma_surface3d")
-        print(max(xx), max(yy))
         plot.image(image='img',
                    source=source_2,
                    x='x', y='y', dw='dw', dh='dh', palette="Spectral11", level="image")
