@@ -759,12 +759,16 @@ class Sinus3D:
         xhr.responseType = 'json';
         xhr.onload = function() {    
             reponse =  xhr.response
-            source1.data.x = reponse['x'];
-            source1.data.y = reponse['y'];
-            source1.data.z = reponse['z'];
-            source2.data.z = reponse['img'];
-            source2.data.x2d = reponse['x2d'];
-            source2.data.y2d = reponse['y2d'];
+            source1.data.x = reponse['s1_x'];
+            source1.data.y = reponse['s1_y'];
+            source1.data.z = reponse['s1_z'];
+            alert("img before");
+            alert(source2.data.img.length);
+            alert(source2.data.img[0].length);
+            source2.data.img = reponse['s2_img'];
+            alert("img after");
+            alert(source2.data.img.length);
+            alert(source2.data.img[0].length);
             const plot = Bokeh.documents[0].get_model_by_name('ma_surface3d')
             source1.change.emit();
             source2.change.emit();
@@ -774,14 +778,14 @@ class Sinus3D:
     @staticmethod 
     def mon_sinus3d(nu):
         xc, yc  = 150, 150
-        x = np.arange(0, 2 * xc, 2) 
-        y = np.arange(0, 2 * yc, 2)
+        x = np.arange(0, 2 * xc, 100) 
+        y = np.arange(0, 2 * yc, 100)
         x2d, y2d = np.meshgrid(x, y)
         z = 32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5))
         xx = x2d.ravel()
         yy = y2d.ravel()
         zz = z.ravel()
-        return xx, yy, zz, x2d, y2d, z
+        return xx, yy, zz, z
         
     @staticmethod    
     def sinus3d_slider_change(request: HttpRequest) -> HttpResponse:
@@ -790,32 +794,33 @@ class Sinus3D:
         if b_ok:
             nu = float(val[0])
         print("sinus3d_slider_change")
-        xx, yy, zz, x2d,y2d,z = Sinus3D.mon_sinus3d(nu)
-        return JsonResponse(dict(x=xx.tolist(), y=yy.tolist(), z=zz.tolist(),
-                                 img=z.tolist(),x2d=x2d.tolist(),y2d=y2d.tolist()))
+        xx, yy, zz, z = Sinus3D.mon_sinus3d(nu)
+        return JsonResponse(dict(s1_x=xx.tolist(), s1_y=yy.tolist(), s1_z=zz.tolist(),
+                                 s2_img=[zz.tolist()]))
 
     def __call__(self):
         self.nu = 2
         b_ok, val = ts_crs.get_arg_post(self.request, ['nu'])
         if b_ok:
             self.freq = float(val[0])
-        xx, yy, zz, x2d,y2d,z = Sinus3D.mon_sinus3d(self.nu)
+        xx, yy, zz,z = Sinus3D.mon_sinus3d(self.nu)
         plot = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@image")])
 
         nu_slider = Slider(start=0., end=100, value=self.nu, step=1, title=r"nu")
         source_1 = ColumnDataSource(data=dict(x=xx, y=yy, z=zz))
-        source_2 = ColumnDataSource(data=dict(x2d=xx, y2d=yy, z=zz))
+        source_2 = ColumnDataSource(data=dict(img=[z]))
         source_3 = ColumnDataSource(data=dict(freq=[self.nu]))
         callback = CustomJS(args=dict(source1=source_1, source2=source_2, freq=nu_slider),
                             code=self.codeJS)
         nu_slider.js_on_change('value', callback)
 
         surface = Surface3d(x="x", y="y", z="z", data_source=source_1,name="ma_surface3d")
-        plot.image(image='z', source=source_2, x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
-        #plot.image(image=[z], x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
+        plot.image(image='img', source=source_2, x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
+        #plot.image(image=[zz.tolist()], x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
         layout = column(nu_slider,surface, plot)
+        #layout = column(nu_slider, surface)
         script1, div1  = components(layout, "Graphique")
-        return 'sinus_3d.html',{'script1':script1, 'div':div1,}
+        return 'sinus_3d.html',{'script1':script1, 'div':div1}
         
 def image_var_slider(request: HttpRequest) -> HttpResponse:
     nu = 2
@@ -824,23 +829,23 @@ def image_var_slider(request: HttpRequest) -> HttpResponse:
         nu = float(val[0])
     print("image_var_slider")
     xc, yc  = 150, 150
-    x = np.arange(0, 2 * xc, 2) 
-    y = np.arange(0, 2 * yc, 2)
+    x = np.arange(0, 2 * xc, 100) 
+    y = np.arange(0, 2 * yc, 100)
     x2d, y2d = np.meshgrid(x, y)
     z = 32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5))
-    return JsonResponse(dict(img=z.tolist(),x2d=x2d.tolist(),y2d=y2d.tolist()))
+    return JsonResponse(dict(img=[z.ravel().tolist()],x2d=[x2d.ravel().tolist()],y2d=[y2d.ravel().tolist()]))
 
 def image_var(request: HttpRequest):
     nu = 2 
     xc, yc  = 150, 150
-    x = np.arange(0, 2 * xc, 2) 
-    y = np.arange(0, 2 * yc, 2)
+    x = np.arange(0, 2 * xc, 100) 
+    y = np.arange(0, 2 * yc, 100)
     x2d, y2d = np.meshgrid(x, y)
     z = 32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5))
     plot = figure(width=600, height=600,name="Mes_donnees")
 
     nu_slider = Slider(start=0., end=100, value=nu, step=1, title=r"nu")
-    source_2 = ColumnDataSource(data=dict(x2d=x2d, y2d=y2d, z=z))
+    source_2 = ColumnDataSource(data=dict(x2d=[x2d], y2d=[y2d], z=[z]))
     callback = CustomJS(args=dict(source2=source_2, freq=nu_slider),
                         code=CODE_TOKEN + """
         var xhr = new XMLHttpRequest();
@@ -853,8 +858,20 @@ def image_var(request: HttpRequest):
         xhr.responseType = 'json';
         xhr.onload = function() {    
             reponse =  xhr.response
+            alert("z before")
+            alert(source2.data.z.length)
+            alert(source2.data.z[0].length)
             source2.data.z = reponse['img'];
+            alert("z after")
+            alert(source2.data.z.length)
+            alert(source2.data.z[0].length)
+            alert("x2d before")
+            alert(source2.data.x2d.length)
+            alert(source2.data.x2d[0].length)
             source2.data.x2d = reponse['x2d'];
+            alert("x2d after")
+            alert(source2.data.x2d.length)
+            alert(source2.data.x2d[0].length)
             source2.data.y2d = reponse['y2d'];
             source2.change.emit();
             }
@@ -862,7 +879,7 @@ def image_var(request: HttpRequest):
         """)
     nu_slider.js_on_change('value', callback)
 
-    plot.image(image='z', source=source_2, x=0, y=0, dw=max(x), dh=max(y), palette="Spectral11", level="image")
+    plot.image(image='z', source=source_2, x=0, y=0, dw=max(x)+1, dh=max(y)+1, palette="Spectral11", level="image")
     #plot.image(image=[z], x=0, y=0, dw=max(x), dh=max(y), palette="Spectral11", level="image")
     layout = column(nu_slider,plot)
     script1, div1  = components(layout, "Graphique")
