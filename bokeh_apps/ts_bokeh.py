@@ -762,14 +762,17 @@ class Sinus3D:
             source1.data.x = reponse['s1_x'];
             source1.data.y = reponse['s1_y'];
             source1.data.z = reponse['s1_z'];
-            alert("img before");
-            alert(source2.data.img.length);
-            alert(source2.data.img[0].length);
+            //alert("img before");
+            //alert(source2.data.img.length);
+            //alert(source2.data.img[0].length);
             source2.data.img = reponse['s2_img'];
+            source2.data.x = reponse['s2_x'];
+            source2.data.y = reponse['s2_y'];
+            source2.data.dw = reponse['s2_dw'];
+            source2.data.dh = reponse['s2_dh'];
             alert("img after");
             alert(source2.data.img.length);
             alert(source2.data.img[0].length);
-            const plot = Bokeh.documents[0].get_model_by_name('ma_surface3d')
             source1.change.emit();
             source2.change.emit();
             }
@@ -781,10 +784,12 @@ class Sinus3D:
         x = np.arange(0, 2 * xc, 100) 
         y = np.arange(0, 2 * yc, 100)
         x2d, y2d = np.meshgrid(x, y)
-        z = 32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5))
-        xx = x2d.ravel()
-        yy = y2d.ravel()
-        zz = z.ravel()
+        z = np.round(32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5)),0)
+        xx = np.round(x2d.ravel(), 0)
+        yy = np.round(y2d.ravel(), 0)
+        zz = np.round(z.ravel(), 0)
+        print(xx.max(), yy.max(), zz.max(), z.max())
+        print(xx.min(), yy.min(), zz.min(), z.min())
         return xx, yy, zz, z
         
     @staticmethod    
@@ -795,8 +800,15 @@ class Sinus3D:
             nu = float(val[0])
         print("sinus3d_slider_change")
         xx, yy, zz, z = Sinus3D.mon_sinus3d(nu)
-        return JsonResponse(dict(s1_x=xx.tolist(), s1_y=yy.tolist(), s1_z=zz.tolist(),
-                                 s2_img=[zz.tolist()]))
+
+        return JsonResponse(dict(s1_x=xx.tolist(), 
+                                 s1_y=yy.tolist(),
+                                 s1_z=zz.tolist(),
+                                 s2_img=[zz.tolist()],
+                                 s2_x=[0],
+                                 s2_y=[0],
+                                 s2_dw=[int(xx.max())],
+                                 s2_dh=[int(yy.max())]))
 
     def __call__(self):
         self.nu = 2
@@ -804,18 +816,25 @@ class Sinus3D:
         if b_ok:
             self.freq = float(val[0])
         xx, yy, zz,z = Sinus3D.mon_sinus3d(self.nu)
-        plot = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@image")])
+        plot = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@img")])
 
         nu_slider = Slider(start=0., end=100, value=self.nu, step=1, title=r"nu")
         source_1 = ColumnDataSource(data=dict(x=xx, y=yy, z=zz))
-        source_2 = ColumnDataSource(data=dict(img=[z]))
+        source_2 = ColumnDataSource(data=dict(img=[z],
+                                              x=[0],
+                                              y=[0],
+                                              dw=[int(xx.max())],
+                                              dh=[int(yy.max())]))
         source_3 = ColumnDataSource(data=dict(freq=[self.nu]))
         callback = CustomJS(args=dict(source1=source_1, source2=source_2, freq=nu_slider),
                             code=self.codeJS)
         nu_slider.js_on_change('value', callback)
 
         surface = Surface3d(x="x", y="y", z="z", data_source=source_1,name="ma_surface3d")
-        plot.image(image='img', source=source_2, x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
+        print(max(xx), max(yy))
+        plot.image(image='img',
+                   source=source_2,
+                   x='x', y='y', dw='dw', dh='dh', palette="Spectral11", level="image")
         #plot.image(image=[zz.tolist()], x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
         layout = column(nu_slider,surface, plot)
         #layout = column(nu_slider, surface)
