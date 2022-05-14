@@ -706,7 +706,6 @@ DEFAULTS = {
 # a custom tool, you could inherit from ``Tool``, or from ``Glyph`` if you
 # wanted to create a custom glyph, etc.
 class Surface3d(LayoutDOM):
-
     # The special class attribute ``__implementation__`` should contain a string
     # of JavaScript (or TypeScript) code that implements the JavaScript side
     # of the custom extension model.
@@ -737,10 +736,10 @@ class Surface3d(LayoutDOM):
     # Any of the available vis.js options for Graph3d can be set by changing
     # the contents of this dictionary.
     options = Dict(String, Any, default=DEFAULTS)        
+    print('LayoutDOM = ',LayoutDOM)
 
 class Sinus3D:
-    ''' A 3D graph using the ColumnDataSource of Bokeh with the Graph3d library.
-    This example shows the custom extension feature of Bokeh.
+    ''' sinus en fonction de la distance au centre
 
     '''
 
@@ -775,17 +774,15 @@ class Sinus3D:
     @staticmethod 
     def mon_sinus3d(nu):
         xc, yc  = 150, 150
-        x = np.arange(0, 2 * xc, 10) 
-        y = np.arange(0, 2 * yc, 10)
+        x = np.arange(0, 2 * xc, 2) 
+        y = np.arange(0, 2 * yc, 2)
         x2d, y2d = np.meshgrid(x, y)
         z2d = np.round(32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5)),0)
         x1d = np.round(x2d.ravel(), 0)
         y1d = np.round(y2d.ravel(), 0)
         z1d = np.round(z2d.ravel(), 0)
-        print(x1d.shape,y1d.shape,z1d.shape, z2d.shape)
-        print(x1d.max(), y1d.max(), z1d.max(), z2d.max())
-        print(x1d.min(), y1d.min(), z1d.min(), z2d.min())
-        return x1d, y1d, z1d, z2d
+        texte = r"$$I(x,y) =32+31\sin(2\pi \frac{nu}{1000} \sqrt{(x-150)^2 + (y -150)^2})  $$"
+        return x1d, y1d, z1d, z2d, texte
         
     @staticmethod    
     def sinus3d_slider_change(request: HttpRequest) -> HttpResponse:
@@ -793,12 +790,7 @@ class Sinus3D:
         b_ok, val = ts_crs.get_arg_post(request, ['nu'])
         if b_ok:
             nu = float(val[0])
-        print("sinus3d_slider_change")
-        x1d, y1d, z1d, z2d = Sinus3D.mon_sinus3d(nu)
-        print(x1d.shape,y1d.shape,z1d.shape, z2d.shape)
-        print(x1d.max(), y1d.max(), z1d.max(), z2d.max())
-        print(x1d.min(), y1d.min(), z1d.min(), z2d.min())
-
+        x1d, y1d, z1d, z2d, _ = Sinus3D.mon_sinus3d(nu)
         return JsonResponse(dict(s1_x=x1d.tolist(), 
                                  s1_y=y1d.tolist(),
                                  s1_z=z1d.tolist(),
@@ -813,8 +805,7 @@ class Sinus3D:
         b_ok, val = ts_crs.get_arg_post(self.request, ['nu'])
         if b_ok:
             self.freq = float(val[0])
-        x1d, y1d, z1d, z2d = Sinus3D.mon_sinus3d(self.nu)
-        plot = figure(tooltips=[("x", "$x"), ("y", "$y"), ("value", "@img")])
+        x1d, y1d, z1d, z2d, texte = Sinus3D.mon_sinus3d(self.nu)
 
         nu_slider = Slider(start=0., end=100, value=self.nu, step=1, title=r"nu")
         source_1 = ColumnDataSource(data=dict(x=x1d, y=y1d, z=z1d))
@@ -824,16 +815,24 @@ class Sinus3D:
                                               dw=[int(x1d.max())],
                                               dh=[int(y1d.max())]))
         source_3 = ColumnDataSource(data=dict(freq=[self.nu]))
+        plot = figure(width=300,
+                      height=300,
+                      tooltips=[("x", "$x"), ("y", "$y"), ("value", "@img")])
+        plot.image(image='img',
+                   source=source_2,
+                   x='x', y='y', dw='dw', dh='dh', palette="Spectral11", level="image")
         callback = CustomJS(args=dict(source1=source_1, source2=source_2, freq=nu_slider),
                             code=self.codeJS)
         nu_slider.js_on_change('value', callback)
 
-        surface = Surface3d(x="x", y="y", z="z", data_source=source_1,name="ma_surface3d")
-        plot.image(image='img',
-                   source=source_2,
-                   x='x', y='y', dw='dw', dh='dh', palette="Spectral11", level="image")
+        surface = Surface3d(x="x", y="y", z="z",
+                            data_source=source_1,
+                            options={'width':'300px', 'height':'300px'},
+                            name="ma_surface3d")
         #plot.image(image=[zz.tolist()], x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
-        layout = column(nu_slider,surface, plot)
+        div1 = Div(width=400, height=50, background="#fafafa",
+                  text=texte)
+        layout = column(nu_slider, plot, div1, surface)
         #layout = column(nu_slider, surface)
         script1, div1  = components(layout, "Graphique")
         return 'sinus_3d.html',{'script1':script1, 'div':div1}

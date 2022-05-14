@@ -38,7 +38,7 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/index'),name="index"),
     path('index/frequence', views.frequence,name="frequence"),
     path('index/cercle_trigo', views.cercle_trigo,name="cercle_trigo"),
-    path('index/freq_spatiale_2d', views.freq_spatiale_2d,name="freq_spatiale_2d"),
+    path('index/freq_spatiale_2d', views.sinus_3d,name="freq_spatiale_2d"),
     path('index/melange_sinus', views.melange_sinus,name="melange_sinus"),
     path('index/exo_trans_simil', views.exo_trans_simil,name="exo_trans_simil"),
     path('index/simul_sf', views.simul_sf,name="simul_sf"),
