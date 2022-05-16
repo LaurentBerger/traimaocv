@@ -1,5 +1,7 @@
 import os
 import numpy as np
+import scipy.signal
+
 #from django.views.decorators.csrf import csrf_protect
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
@@ -786,7 +788,7 @@ class Fct2D:
                        np.exp(-d**2/2/(nu+1)**2) * \
                        (1 - (d/(nu+0.01))**2),0)
         z1d = np.round(z2d.ravel(), 0)
-        texte = r"$$I(x,y) =32+31e^{-(2\pi \frac{nu}{1000} \sqrt{(x-150)^2 + (y -150)^2})  $$"
+        texte = r"$$I(x,y) =32+31e^{-(2\pi \frac{nu}{1000} \sqrt{(x-150)^2 + (y -150)^2}})  $$"
         return Fct2D.x1d, Fct2D.y1d, z1d, z2d, texte
 
     def __init__(self, request=None, nom_fct=None, buf_memory=True):
@@ -896,6 +898,162 @@ class Fct2D:
         #layout = column(nu_slider, surface)
         script1, div1  = components(layout, "Graphique")
         return 'sinus_3d.html',{'script1':script1, 'div':div1}
+
+class ChirpBkh:    
+    def __init__(self, request=None, buf_memory=True):
+        self.request = request
+        self.memory = buf_memory
+        freq1= 1000
+        tau = 10
+        self.freq1 = 100
+        self.freq2 = 1000
+        self.Fe = 22050
+        self.duree = 1
+        self.liste_methode = ['linear',
+                              'quadratic',
+                              'logarithmic',
+                              'hyperbolic']
+        self.methode = self.liste_methode[0]
+        self.codeJS = CODE_TOKEN + """
+        var xhr = new XMLHttpRequest();
+        
+        xhr.open("POST", "/index/chirp_slider_change", true);
+        xhr.setRequestHeader('mode', 'same-origin');
+        var dataForm = new FormData();
+        dataForm.append('csrfmiddlewaretoken', csrfToken);
+        dataForm.append('freq1', freq1.value);
+        dataForm.append('freq2', freq2.value);
+        dataForm.append('duree', duree.value);
+        dataForm.append('methode', menu_methode.value);
+        xhr.responseType = 'json';
+        xhr.onload = function() {    
+            reponse =  xhr.response
+            const plot = Bokeh.documents[0].get_model_by_name('Mes_donnees')
+            source1.data.x = reponse['s1_x'];
+            source1.data.y = reponse['s1_y'];
+            source2.data.freq1 = reponse['s2_freq1'];
+            source2.data.freq2 = reponse['s2_freq2'];
+            source2.data.duree = reponse['s2_duree'];
+            source2.data.mehode= reponse['s2_methode'];
+            source2.data.texte= reponse['s2_leg'];
+            source3.data.Y = reponse['s3_Y'];
+            source3.data.nu = reponse['s3_nu'];
+            var audio_b64 = reponse['base64'];
+            const aud = document.getElementById("audio_tag1")
+            aud.src="data:audio/wav;base64,"+audio_b64
+            const div1 = Bokeh.documents[0].get_model_by_name('leg_latex')
+            div1.text = source2.data.texte[0]
+            source1.change.emit();
+            source2.change.emit();
+            source3.change.emit();
+            }
+        xhr.send(dataForm);
+        """
+    @staticmethod    
+    def sig_spectre_chirp(freq1=100, freq2=1000, Fe=22050, methode='linear', duree=1):
+        t = np.arange(0, duree, 1 / Fe)
+        y = scipy.signal.chirp(t, f0=freq1, f1=freq2, t1=max(t), method=methode)
+        S = np.fft.fft(y, axis=0)
+        nu = np.fft.fftfreq(t.shape[0])*Fe
+        l_texte = [r"$$y(t) = sin(2\pi \frac{f_1-f_0}{2T} t^2 + f_0t+ \frac{\pi}2)  $$", 
+                   r"",
+                   r"$$I(x,y) =32+31e^{-(2\pi \frac{nu}{1000} \sqrt{(x-150)^2 + (y -150)^2}})  $$",
+                   r"$$y(t) = sin(\frac{\pi}2 + 2\pi \frac{f_1.f_0T}{f_1-f_0} ln(1 - \frac{f_1-f_0}{f_1 T})$$"]
+        texte = ""
+        if methode == 'linear':
+            texte = l_texte[0]
+        if methode == 'quadratic':
+            texte = l_texte[1]
+        if methode == 'logarithmic':
+            texte = l_texte[2]
+        if methode == 'hyperbolic':
+            texte = l_texte[3]
+        return y, t, nu, np.abs(S)/Fe, texte
+    
+    @staticmethod    
+    def chirp_slider_change(request: HttpRequest) -> HttpResponse:
+        freq1 = 100
+        freq2 = 1000
+        duree = 1
+        Fe = 22050
+        methode = 'linear'
+        b_ok, val = ts_crs.get_arg_post(request,
+                                        ['freq1','freq2', 'methode', 'duree'])
+        if b_ok:
+            freq1= float(val[0])
+            freq2= float(val[1])
+            methode = val[2]
+            duree = float(val[3])
+        y, t, nu, Y, texte = ChirpBkh.sig_spectre_chirp(freq1, freq2, Fe, methode, duree)
+        urs =  ts_crs.convert_npson_uri(y, Fe)    
+        return JsonResponse(dict(s1_x=t.tolist(),s1_y=y.tolist(),
+                                 s2_freq1=freq1, s2_freq2=freq2,
+                                 s2_methode=methode, s2_duree=duree, s2_leg=[texte],
+                                 s3_nu=nu.tolist(), s3_Y= Y.tolist(),                             
+                                 base64=urs))
+
+    def __call__(self):
+        b_ok, val = ts_crs.get_arg_post(self.request,
+                                        ['freq1','freq2', 'methode'])
+        if b_ok:
+            self.freq1= float(val[0])
+            self.freq2= float(val[1])
+            self.methode = val[2]
+        plot_time = figure(width=400,
+                           height=200,
+                           title="Chirp (utiliser la loupe)",
+                           name="Mes_donnees_t")
+        plot_fft = figure(width=400,
+                          height=200,
+                          title="Module du spectre",
+                          name="Mes_donnees_f")
+        y, t, nu, Y, texte1 = ChirpBkh.sig_spectre_chirp(self.freq1, self.freq2, methode=self.methode)
+        source_1 = ColumnDataSource(dict(x=t, y=y))
+        source_2 = ColumnDataSource(dict(freq1=[self.freq1],
+                                         freq2=[self.freq2],
+                                         duree=[self.duree],
+                                         methode=[self.methode]))
+        source_3 = ColumnDataSource(dict(nu=nu,Y=Y))
+        le_sinus = plot_time.line('x', 'y',
+                                  source=source_1,
+                                  line_width=3,
+                                  line_alpha=0.6,
+                                  )
+        plot_time.xaxis.axis_label=r"$$t (s)$$"
+        plot_time.yaxis.axis_label=r"$$y(t)$$"
+        le_spectre = plot_fft.scatter('nu' ,'Y',
+                                   source=source_3,
+                                   name="Mon_spectre",
+                                   line_width=3,
+                                   line_alpha=0.6)
+        plot_fft.xaxis.axis_label=r"$$\nu (Hz)$$"
+        plot_fft.yaxis.axis_label=r"$$|Y(\nu)| (u.a.)$$"
+        div1 = Div(width=400, height=50, background="#fafafa",name='leg_latex',
+                  text=texte1)
+                  
+
+        menu_methode = Select(title="Fonctions", value=self.methode, options=self.liste_methode)
+        freq1_slider = Slider(start=20., end=0.9*self.Fe/2, value=self.freq1, step=1, title=r"Fréquence initale f1",syncable=True)
+        freq2_slider = Slider(start=20, end=0.9*self.Fe/2, value=self.freq2, step=.1, title="Fréquence finale f2",syncable=True)
+        duree_slider = Slider(start=1, end=4, value=self.duree, step=1, title="Duree T",syncable=True)
+        callback = CustomJS(args=dict(source1=source_1,
+                                      source2=source_2,
+                                      source3=source_3,
+                                      freq1=freq1_slider,
+                                      freq2=freq2_slider,
+                                      duree=duree_slider,
+                                      menu_methode=menu_methode),
+                            code=self.codeJS)
+
+        freq1_slider.js_on_change('value_throttled', callback)
+        freq2_slider.js_on_change('value_throttled', callback)
+        duree_slider.js_on_change('value_throttled', callback)
+        menu_methode.js_on_change('value', callback)
+        layout = column(menu_methode, freq1_slider, freq2_slider,duree_slider,
+                        plot_time, div1, plot_fft)
+        urs =  ts_crs.convert_npson_uri(y, self.Fe)
+        script1, div1  = components(layout, "Graphique")
+        return 'Chirp_bkh.html',{'script1':script1, 'div':div1, 'data_snd':urs}
         
 def image_var_slider(request: HttpRequest) -> HttpResponse:
     nu = 2

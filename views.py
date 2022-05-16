@@ -66,6 +66,12 @@ def sinus_amorti_bkh(request):
     
     
 @xframe_options_exempt    
+def chirp_bkh(request):
+    a = ts_bkh.ChirpBkh(request)()
+    return render(request,a[0], a[1])
+    
+    
+@xframe_options_exempt    
 def exo_trans_simil(request):
     a = ts_crs.TransSimil(request)()
     return render(request,a[0], a[1])

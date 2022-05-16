@@ -1,0 +1,32 @@
+<body>
+<TITLE>Mélange de fréquences</TITLE>
+<html lang="en">
+  <head>
+      <meta charset="utf-8">
+      <title>my plot</title>
+        <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>
+        <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+        <script src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.2.min.js" crossorigin="anonymous"></script>        
+        <script type="text/javascript">
+            Bokeh.set_log_level("info");
+        </script>
+  </head>
+  {{ div | safe }}
+  <body>
+  <div>
+{{ script1|safe }}
+<form method="post">{% csrf_token %}</form>
+</div>
+
+<audio id="audio_tag1" controls  autoplay >
+<source src="data:audio/x-wav;base64,{{ data_snd }}" />
+      You need a HTML5 compliant web browser. (eg Firefox 3.5...)
+</audio>
+<br/>
+
+</body>
+</html>
+                     
+                          
