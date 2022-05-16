@@ -738,15 +738,67 @@ class Surface3d(LayoutDOM):
     options = Dict(String, Any, default=DEFAULTS)        
     print('LayoutDOM = ',LayoutDOM)
 
-class Sinus3D:
+class Fct2D:
     ''' sinus en fonction de la distance au centre
 
     '''
+    xc, yc  = 150, 150
+    x = np.arange(0, 2 * xc, 2) 
+    y = np.arange(0, 2 * yc, 2)
+    x2d, y2d = np.meshgrid(x, y)
+    x1d = np.round(x2d.ravel(), 0)
+    y1d = np.round(y2d.ravel(), 0)
+    @staticmethod 
+    def indentif_fct2d(nom_fct):
+        nom_to_fct = {"sinus2d":Fct2D.sinus2d,
+                      "sinus2dx":Fct2D.sinus2dx,
+                      "sinus2dy":Fct2D.sinus2dy,
+                      "chapeau2d":Fct2D.chapeau2d
+                      }
+        return nom_to_fct[nom_fct]
+        
+    @staticmethod 
+    def sinus2d(nu):
+        z2d = np.round(32+31*np.sin(2 * np.pi * nu/1000 * \
+                                    ((Fct2D.x2d - Fct2D.xc) ** 2 + \
+                                     (Fct2D.y2d - Fct2D.yc) ** 2) ** (0.5)),0)
+        z1d = np.round(z2d.ravel(), 0)
+        texte = r"$$I(x,y) =32+31\sin(2\pi \frac{nu}{1000} \sqrt{(x-150)^2 + (y -150)^2})  $$"
+        return Fct2D.x1d, Fct2D.y1d, z1d, z2d, texte
 
-    def __init__(self, request=None, buf_memory=True):
+    def sinus2dx(nu):
+        z2d = np.round(32+31*np.sin(2 * np.pi * nu/1000 * Fct2D.x2d),0)
+        z1d = np.round(z2d.ravel(), 0)
+        texte = r"$$I(x,y) =32+31\sin(2\pi \frac{nu}{1000}x)  $$"
+        return Fct2D.x1d, Fct2D.y1d, z1d,z2d, texte
+
+    def sinus2dy(nu):
+        z2d = np.round(32+31*np.sin(2 * np.pi * nu/1000 * Fct2D.y2d),0)
+        z1d = np.round(z2d.ravel(), 0)
+        texte = r"$$I(x,y) =32+31\sin(2\pi \frac{nu}{1000} y)  $$"
+        return Fct2D.x1d, Fct2D.y1d, z1d, z2d, texte
+
+
+    @staticmethod 
+    def chapeau2d(nu):
+        d = ((Fct2D.x2d - Fct2D.xc) ** 2+(Fct2D.y2d - Fct2D.yc) ** 2)**0.5 / (nu + 0.01)
+        z2d = np.round(32 + 31 * \
+                       np.exp(-d**2/2/(nu+1)**2) * \
+                       (1 - (d/(nu+0.01))**2),0)
+        z1d = np.round(z2d.ravel(), 0)
+        texte = r"$$I(x,y) =32+31e^{-(2\pi \frac{nu}{1000} \sqrt{(x-150)^2 + (y -150)^2})  $$"
+        return Fct2D.x1d, Fct2D.y1d, z1d, z2d, texte
+
+    def __init__(self, request=None, nom_fct=None, buf_memory=True):
         self.request = request
         self.memory = buf_memory
         self.nu = 1
+        self.nom_fct = nom_fct
+        self.fct_2d = Fct2D.indentif_fct2d(nom_fct)
+        self.liste_fct = ["sinus2d",
+                          "sinus2dx",
+                          "sinus2dy",
+                          "chapeau2d"]
         self.codeJS = CODE_TOKEN + """
         var xhr = new XMLHttpRequest();
       
@@ -755,9 +807,10 @@ class Sinus3D:
         var dataForm = new FormData();
         dataForm.append('csrfmiddlewaretoken', csrfToken);
         dataForm.append('nu', freq.value);
+        dataForm.append('nom_fct', menu_fct.value);
         xhr.responseType = 'json';
         xhr.onload = function() {    
-            reponse =  xhr.response
+             reponse =  xhr.response
             source1.data.x = reponse['s1_x'];
             source1.data.y = reponse['s1_y'];
             source1.data.z = reponse['s1_z'];
@@ -766,31 +819,29 @@ class Sinus3D:
             source2.data.y = reponse['s2_y'];
             source2.data.dw = reponse['s2_dw'];
             source2.data.dh = reponse['s2_dh'];
+            source4.data.texte = reponse['s4_texte']
             source1.change.emit();
             source2.change.emit();
+            const div1 = Bokeh.documents[0].get_model_by_name('leg_latex')
+            window.alert(div1);
+            div1.text = source4.data.texte
+            source4.change.emit();
             }
         xhr.send(dataForm);
         """
-    @staticmethod 
-    def mon_sinus3d(nu):
-        xc, yc  = 150, 150
-        x = np.arange(0, 2 * xc, 2) 
-        y = np.arange(0, 2 * yc, 2)
-        x2d, y2d = np.meshgrid(x, y)
-        z2d = np.round(32+31*np.sin(2 * np.pi * nu/1000 * ((x2d - xc) ** 2+(y2d - yc) ** 2) ** (0.5)),0)
-        x1d = np.round(x2d.ravel(), 0)
-        y1d = np.round(y2d.ravel(), 0)
-        z1d = np.round(z2d.ravel(), 0)
-        texte = r"$$I(x,y) =32+31\sin(2\pi \frac{nu}{1000} \sqrt{(x-150)^2 + (y -150)^2})  $$"
-        return x1d, y1d, z1d, z2d, texte
         
     @staticmethod    
     def sinus3d_slider_change(request: HttpRequest) -> HttpResponse:
         nu = 2
-        b_ok, val = ts_crs.get_arg_post(request, ['nu'])
+        nom_fct = 'sinus2d'
+        fct_2d = Fct2D.indentif_fct2d(nom_fct)
+        b_ok, val = ts_crs.get_arg_post(request, ['nu', 'nom_fct'])
         if b_ok:
             nu = float(val[0])
-        x1d, y1d, z1d, z2d, _ = Sinus3D.mon_sinus3d(nu)
+            nom_fct = val[1]
+            fct_2d = Fct2D.indentif_fct2d(nom_fct)
+        print(b_ok, nom_fct)
+        x1d, y1d, z1d, z2d, texte = fct_2d(nu)
         return JsonResponse(dict(s1_x=x1d.tolist(), 
                                  s1_y=y1d.tolist(),
                                  s1_z=z1d.tolist(),
@@ -798,15 +849,17 @@ class Sinus3D:
                                  s2_x=[0],
                                  s2_y=[0],
                                  s2_dw=[int(x1d.max())],
-                                 s2_dh=[int(y1d.max())]))
+                                 s2_dh=[int(y1d.max())],
+                                 s4_texte=[texte]))
 
     def __call__(self):
         self.nu = 2
         b_ok, val = ts_crs.get_arg_post(self.request, ['nu'])
         if b_ok:
             self.freq = float(val[0])
-        x1d, y1d, z1d, z2d, texte = Sinus3D.mon_sinus3d(self.nu)
-
+        x1d, y1d, z1d, z2d, texte = self.fct_2d(self.nu)
+        
+        menu_fct = Select(title="Fonctions", value=self.liste_fct[0], options=self.liste_fct)
         nu_slider = Slider(start=0., end=100, value=self.nu, step=1, title=r"nu")
         source_1 = ColumnDataSource(data=dict(x=x1d, y=y1d, z=z1d))
         source_2 = ColumnDataSource(data=dict(img=[z2d],
@@ -814,16 +867,23 @@ class Sinus3D:
                                               y=[0],
                                               dw=[int(x1d.max())],
                                               dh=[int(y1d.max())]))
-        source_3 = ColumnDataSource(data=dict(freq=[self.nu]))
+        source_3 = ColumnDataSource(data=dict(freq=[self.nu], nom_fct=[self.nom_fct]))
+        source_4 = ColumnDataSource(data=dict(freq=[self.nu], texte=[texte]))
         plot = figure(width=300,
                       height=300,
                       tooltips=[("x", "$x"), ("y", "$y"), ("value", "@img")])
         plot.image(image='img',
                    source=source_2,
                    x='x', y='y', dw='dw', dh='dh', palette="Spectral11", level="image")
-        callback = CustomJS(args=dict(source1=source_1, source2=source_2, freq=nu_slider),
+        callback = CustomJS(args=dict(source1=source_1,
+                                      source2=source_2,
+                                      source3=source_3,
+                                      source4=source_4,
+                                      freq=nu_slider,
+                                      menu_fct=menu_fct),
                             code=self.codeJS)
         nu_slider.js_on_change('value', callback)
+        menu_fct.js_on_change('value', callback)
 
         surface = Surface3d(x="x", y="y", z="z",
                             data_source=source_1,
@@ -831,8 +891,9 @@ class Sinus3D:
                             name="ma_surface3d")
         #plot.image(image=[zz.tolist()], x=0, y=0, dw=max(xx), dh=max(yy), palette="Spectral11", level="image")
         div1 = Div(width=400, height=50, background="#fafafa",
-                  text=texte)
-        layout = column(nu_slider, plot, div1, surface)
+                  text=texte, name="leg_latex")
+        menu_fct.js_on_change('value', callback)
+        layout = column(menu_fct, nu_slider, plot, div1, surface)
         #layout = column(nu_slider, surface)
         script1, div1  = components(layout, "Graphique")
         return 'sinus_3d.html',{'script1':script1, 'div':div1}

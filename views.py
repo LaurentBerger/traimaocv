@@ -30,8 +30,13 @@ def freq_phase(request):
     return render(request, a[0], a[1])
 
 @xframe_options_exempt
-def sinus_3d(request):
-    a = ts_bkh.Sinus3D(request)()
+def sinus_2d(request):
+    a = ts_bkh.Fct2D(request,"sinus2d")()
+    return render(request, a[0], a[1])
+
+@xframe_options_exempt
+def chapeau_2d(request):
+    a = ts_bkh.Fct2D(request,"chapeau2d")()
     return render(request, a[0], a[1])
 
 @xframe_options_exempt
