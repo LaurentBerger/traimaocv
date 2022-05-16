@@ -823,7 +823,6 @@ class Fct2D:
             source1.change.emit();
             source2.change.emit();
             const div1 = Bokeh.documents[0].get_model_by_name('leg_latex')
-            window.alert(div1);
             div1.text = source4.data.texte[0]
             source4.change.emit();
             }
