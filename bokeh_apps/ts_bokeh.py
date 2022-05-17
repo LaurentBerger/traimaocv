@@ -956,8 +956,8 @@ class ChirpBkh:
         S = np.fft.fft(y, axis=0)
         nu = np.fft.fftfreq(t.shape[0])*Fe
         l_texte = [r"$$y(t) = sin(2\pi \frac{f_1-f_0}{2T} t^2 + f_0t+ \frac{\pi}2)  $$", 
-                   r"",
-                   r"$$I(x,y) =32+31e^{-(2\pi \frac{nu}{1000} \sqrt{(x-150)^2 + (y -150)^2}})  $$",
+                   r"$$y(t) = sin(2\pi \frac{f_1-f_0}{3T^2} t^3 + f_0t+ \frac{\pi}2)  $$",
+                   r"$$y(t) = sin(2\pi \int_{0}^{t} f(x) \,dx) \textrm{  avec  } f(x)=f_0 (f_1/f_0)^{x/T}$$",
                    r"$$y(t) = sin(\frac{\pi}2 + 2\pi \frac{f_1.f_0T}{f_1-f_0} ln(1 - \frac{f_1-f_0}{f_1 T})$$"]
         texte = ""
         if methode == 'linear':
