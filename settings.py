@@ -36,7 +36,7 @@ BASE_PATH = Path(BASE_DIR)
 SECRET_KEY = get_env_variable("dj_secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 if "USERDOMAIN" in os.environ:
     if os.environ[ "USERDOMAIN"]=='PC-LAURENT-VISI':
         DEBUG = True
